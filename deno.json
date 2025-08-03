@@ -1,0 +1,64 @@
+{
+  "name": "@phughesmcr/qdajs",
+  "version": "0.1.0",
+  "license": "MIT",
+  "exports": "./mod.ts",
+  "bench": {
+    "include": ["bench/**/*.bench.ts"]
+  },
+  "compilerOptions": {
+    "erasableSyntaxOnly": true,
+    "allowUnreachableCode": false,
+    "allowUnusedLabels": false,
+    "lib": ["esnext"],
+    "noErrorTruncation": true,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitAny": true,
+    "noImplicitOverride": true,
+    "noImplicitReturns": true,
+    "noImplicitThis": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "noUncheckedIndexedAccess": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "strict": true,
+    "verbatimModuleSyntax": true
+  },
+  "exclude": ["example/**/*.ts"],
+  "fmt": {
+    "indentWidth": 2,
+    "lineWidth": 120,
+    "semiColons": true,
+    "singleQuote": false,
+    "proseWrap": "always",
+    "useTabs": false,
+    "exclude": ["*.md", "LICENSE"]
+  },
+  "lint": {
+    "include": ["src/**/*.ts", "mod.ts"],
+    "rules": {
+      "tags": ["recommended", "jsr"]
+    }
+  },
+  "imports": {
+    "@xmldom/xmldom": "npm:@xmldom/xmldom@^0.9.8",
+    "zod": "npm:zod@^4.0.14"
+  },
+  "tasks": {
+    "prep": {
+      "description": "Format, lint, and check the codebase",
+      "command": "deno fmt && deno lint && deno check mod.ts src/**/*.ts"
+    },
+    "test": {
+      "description": "Run tests",
+      "command": "deno test -A"
+    },
+    "bench": {
+      "description": "Run benchmarks",
+      "command": "deno bench -A"
+    }
+  },
+  "test": {
+    "include": ["test/**/*.test.ts"]
+  }
+}
