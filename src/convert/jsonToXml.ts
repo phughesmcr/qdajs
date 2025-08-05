@@ -1,7 +1,7 @@
 import { type Document, DOMImplementation, type Element, XMLSerializer } from "@xmldom/xmldom";
 import { elementFields } from "../constants.ts";
 import { projectSchema } from "../schema.ts";
-import type { JsonObject, JsonToQdeResult, JsonValue, NormalizedQdeData, QdeToJsonResult } from "../types.ts";
+import type { JsonToQdeResult, QdeToJsonResult } from "../types.ts";
 
 // Pre-created error messages to avoid string operations during errors
 const ERROR_INVALID_INPUT = "Invalid input: expected object with QDE data";
@@ -33,7 +33,7 @@ class JsonToXmlConverter {
    * @returns XML string with proper formatting and escaping
    * @throws Error if data is not a valid object
    */
-  static toXml(data: JsonValue, rootElementName = "Project"): string {
+  static toXml(data: Record<string, unknown>, rootElementName = "Project"): string {
     if (typeof data !== "object" || data === null || Array.isArray(data)) {
       throw new Error(ERROR_ROOT_NOT_OBJECT);
     }
@@ -42,7 +42,7 @@ class JsonToXmlConverter {
     const doc = domImpl.createDocument("", "", null);
 
     // Create root element and convert JSON to DOM
-    const rootElement = JsonToXmlConverter.#objectToElement(doc, data as JsonObject, rootElementName);
+    const rootElement = JsonToXmlConverter.#objectToElement(doc, data as Record<string, unknown>, rootElementName);
     doc.appendChild(rootElement);
 
     // Use xmldom's serializeToString for optimal performance
@@ -60,12 +60,12 @@ class JsonToXmlConverter {
    * @param elementName - Name of the XML element
    * @returns DOM Element
    */
-  static #objectToElement(doc: Document, obj: JsonObject, elementName: string): Element {
+  static #objectToElement(doc: Document, obj: Record<string, unknown>, elementName: string): Element {
     const element = doc.createElement(elementName);
 
     // Efficient separation of attributes, text content, and child elements
     // Avoid Object.entries() for performance with large objects
-    const children: JsonObject = {};
+    const children: Record<string, unknown> = {};
     let textContent = "";
     let hasTextContent = false;
 
@@ -78,7 +78,7 @@ class JsonToXmlConverter {
           // Process _attributes object - DOM handles escaping automatically
           for (const attrName in value) {
             if (Object.hasOwn(value, attrName)) {
-              element.setAttribute(attrName, String(value[attrName]));
+              element.setAttribute(attrName, String(value[attrName as keyof typeof value]));
             }
           }
         }
@@ -116,7 +116,7 @@ class JsonToXmlConverter {
    * @param value - The JSON value to convert
    * @param elementName - Name of the XML element
    */
-  static #addValueToElement(doc: Document, parent: Element, value: JsonValue, elementName: string): void {
+  static #addValueToElement(doc: Document, parent: Element, value: unknown, elementName: string): void {
     if (Array.isArray(value)) {
       // Handle arrays - each item becomes a separate element with the same name
       for (const item of value) {
@@ -124,7 +124,7 @@ class JsonToXmlConverter {
       }
     } else if (typeof value === "object" && value !== null) {
       // Handle objects
-      const childElement = JsonToXmlConverter.#objectToElement(doc, value as JsonObject, elementName);
+      const childElement = JsonToXmlConverter.#objectToElement(doc, value as Record<string, unknown>, elementName);
       parent.appendChild(childElement);
     } else {
       // Handle primitive values as element content - DOM handles escaping
@@ -142,7 +142,7 @@ class JsonToXmlConverter {
    * @param value - The JSON value to check
    * @returns True if the value should be an attribute
    */
-  static #isPrimitiveValue(value: JsonValue): boolean {
+  static #isPrimitiveValue(value: unknown): boolean {
     const type = typeof value;
     return type === "string" || type === "number" || type === "boolean";
   }
@@ -154,44 +154,40 @@ class JsonToXmlConverter {
  * @param json - JSON data to convert (normalized or raw)
  * @returns Result tuple with XML string or detailed error information
  */
-export function jsonToQde(
-  json: JsonObject | NormalizedQdeData | QdeToJsonResult,
-): JsonToQdeResult {
+export function jsonToQde(json: Record<string, unknown> | QdeToJsonResult): JsonToQdeResult {
   try {
     // Input validation with specific error messages
     if (typeof json !== "object" || json === null) {
-      return [null, new Error(ERROR_INVALID_INPUT)];
+      return [false, new Error(ERROR_INVALID_INPUT)];
     }
 
-    let rawData: JsonObject;
+    let rawData: Record<string, unknown>;
 
-    // Handle normalized format { qde: {...}, meta: {...} }
+    // Handle normalized format { qde: {...} }
     if ("qde" in json) {
       if (typeof json["qde"] !== "object" || json["qde"] === null) {
-        return [null, new Error(ERROR_INVALID_QDE_FIELD)];
+        return [false, new Error(ERROR_INVALID_QDE_FIELD)];
       }
-      rawData = json["qde"] as JsonObject;
+      rawData = json["qde"] as Record<string, unknown>;
     } else {
       // Use input directly as raw QDA data
-      rawData = json as JsonObject;
+      rawData = json as Record<string, unknown>;
     }
 
-    // Optional schema validation for better error reporting
-    // This helps catch structural issues before XML generation
     const validationResult = projectSchema.safeParse(rawData);
     if (!validationResult.success) {
       return [
-        null,
+        false,
         new Error(ERROR_SCHEMA_VALIDATION, { cause: validationResult.error }),
       ];
     }
 
     const xmlString = JsonToXmlConverter.toXml(rawData, "Project");
 
-    return [{ qde: xmlString }, null];
+    return [true, { qde: xmlString }];
   } catch (error) {
     return [
-      null,
+      false,
       new Error(
         `JSON to XML conversion error: ${error instanceof Error ? error.message : String(error)}`,
         { cause: error },

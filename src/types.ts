@@ -1,11 +1,6 @@
 import type { ZodError } from "zod";
 
-export interface JsonObject {
-  // deno-lint-ignore no-explicit-any
-  [key: string]: any;
-}
-
-export type JsonValue = string | number | boolean | JsonObject | JsonValue[];
+export type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue };
 
 export interface NormalizedSet {
   id: string;
@@ -94,8 +89,8 @@ export interface NormalizedQdeData {
   project: NormalizedProject;
 }
 
-export type Result<T, E extends Error = Error> = [T, null] | [null, E];
+export type Result<T, E extends Error = Error> = [ok: true, data: T] | [ok: false, error: E];
 
-export type QdeToJsonResult = Result<{ qde: JsonObject }, Error | ZodError>;
+export type QdeToJsonResult = Result<{ qde: Record<string, unknown> }, Error | ZodError>;
 
 export type JsonToQdeResult = Result<{ qde: string }, Error | ZodError>;

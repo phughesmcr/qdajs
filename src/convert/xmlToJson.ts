@@ -1,4 +1,3 @@
-// deno-lint-ignore-file no-explicit-any
 import { DOMParser, type Element } from "@xmldom/xmldom";
 import {
   alwaysArrays,
@@ -15,7 +14,7 @@ import {
   VALUE_CACHE,
 } from "../constants.ts";
 import { projectSchema } from "../schema.ts";
-import type { JsonObject, JsonValue, QdeToJsonResult } from "../types.ts";
+import type { QdeToJsonResult } from "../types.ts";
 
 class XmlToJsonParser {
   // Singleton parser instance for reuse
@@ -34,7 +33,7 @@ class XmlToJsonParser {
   }
 
   /** Parse XML string to JSON object */
-  static parse(xmlString: string): JsonValue {
+  static parse(xmlString: string): unknown {
     const parser = XmlToJsonParser.#getParser();
     const doc = parser.parseFromString(xmlString, "text/xml");
     // Check for parsing errors
@@ -46,7 +45,7 @@ class XmlToJsonParser {
   }
 
   /** Convert XML element to JSON object */
-  static #elementToJson(element: Element): JsonValue {
+  static #elementToJson(element: Element): unknown {
     const tagName = element.tagName;
 
     // Fast path for reference elements - very common in QDA files
@@ -77,7 +76,7 @@ class XmlToJsonParser {
       return "";
     }
 
-    const result: JsonObject = {};
+    const result: Record<string, unknown> = {};
 
     // Handle attributes - flatten for most elements, keep _attributes for specific ones
     const processedAttrs = XmlToJsonParser.#processAttributes(element);
@@ -93,7 +92,7 @@ class XmlToJsonParser {
     }
 
     // Handle child nodes
-    const children: { [key: string]: any[] } = {};
+    const children: { [key: string]: unknown[] } = {};
     let hasTextContent = false;
     let textContent = "";
     let childElementCount = 0;
@@ -149,17 +148,17 @@ class XmlToJsonParser {
   }
 
   /** Efficient attribute processing with direct indexing and inlined conversion */
-  static #processAttributes(element: Element): JsonObject {
+  static #processAttributes(element: Element): Record<string, unknown> {
     const attrs = element.attributes;
     if (!attrs || attrs.length === 0) return EMPTY_OBJECT;
 
-    const result: JsonObject = {};
+    const result: Record<string, unknown> = {};
     for (let i = 0, len = attrs.length; i < len; i++) {
       const attr = attrs[i]; // Direct indexing instead of attrs.item(i)
       const value = attr!.value;
 
       // Inline value conversion to avoid function call overhead
-      let convertedValue: JsonValue;
+      let convertedValue: unknown;
       const cached = VALUE_CACHE.get(value);
       if (cached !== undefined) {
         convertedValue = cached;
@@ -186,13 +185,14 @@ export function qdeToJson(xmlString: string): QdeToJsonResult {
     const json = XmlToJsonParser.parse(xmlString);
 
     if (typeof json !== "object" || json === null || Array.isArray(json)) {
-      return [null, new Error(ERROR_INVALID_PROJECT)];
+      return [false, new Error(ERROR_INVALID_PROJECT)];
     }
 
-    const project = json as JsonObject;
-    if (!project["_attributes"]?.name) {
+    const project = json as Record<string, unknown>;
+    const attrs = project["_attributes"] as Record<string, unknown>;
+    if (attrs && !("name" in attrs)) {
       return [
-        null,
+        false,
         new Error(ERROR_MISSING_NAME),
       ];
     }
@@ -200,15 +200,15 @@ export function qdeToJson(xmlString: string): QdeToJsonResult {
     const validationResult = projectSchema.safeParse(project);
     if (!validationResult.success) {
       return [
-        null,
+        false,
         new Error(ERROR_SCHEMA_FAILED, { cause: validationResult.error }),
       ];
     }
 
-    return [{ qde: validationResult.data }, null];
+    return [true, { qde: validationResult.data }];
   } catch (error) {
     return [
-      null,
+      false,
       new Error(
         `Parsing error: ${error instanceof Error ? error.message : String(error)}`,
       ),
