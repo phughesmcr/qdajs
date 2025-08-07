@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-QDAJS is a Deno library for converting between QDA (Qualitative Data Analysis) XML format and JSON, focusing on the QDA-XML interchange format specification. The library provides bidirectional conversion with strict schema validation.
+QDAJS is a Deno library for working with QDE (Qualitative Data Exchange) and QDPX (QDA Project Exchange) files. The library provides bidirectional conversion between QDE XML format and JSON, plus functionality to pack/unpack QDPX archive files containing QDE projects and source files.
 
 ## Development Commands
 
@@ -17,8 +17,8 @@ QDAJS is a Deno library for converting between QDA (Qualitative Data Analysis) X
 
 ### Testing and Benchmarking
 
-- `deno test` - Run all tests (files in test/**/*.test.ts)
-- `deno bench` - Run benchmarks (files in bench/**/*.bench.ts)
+- `deno test --allow-read --allow-write ./test/**/*.test.ts` - Run all tests with required permissions
+- `deno bench -A` - Run benchmarks with all permissions
 
 ### Publishing
 
@@ -28,47 +28,68 @@ QDAJS is a Deno library for converting between QDA (Qualitative Data Analysis) X
 
 ### Core Structure
 
-- **mod.ts** - Main entry point exposing the `convert` object with `qdeToJson` and `jsonToQde` functions
-- **src/convert/** - Core conversion logic
-  - **xmlToJson.ts** - XML parsing using @xmldom/xmldom with optimized performance and schema validation
-  - **jsonToXml.ts** - JSON to XML serialization with proper attribute/element handling
-- **src/schema.ts** - Zod schemas for strict QDA-XML validation based on docs/schema.xsd
-- **src/types.ts** - TypeScript type definitions including normalized data structures
-- **src/constants.ts** - Performance optimizations, caching, and QDA-XML structure definitions
+The library is split into two main functional areas:
+
+#### QDE Module (`src/qde/`)
+Handles XML ↔ JSON conversion for QDE project files:
+- **xmlToJson.ts** - High-performance XML parsing using @xmldom/xmldom with singleton parser, optimized attribute processing, and schema-aware conversion
+- **jsonToXml.ts** - JSON to XML serialization using DOM construction and XMLSerializer for proper escaping and formatting
+- **validate.ts** - Zod-based schema validation for QDE JSON structures
+
+#### QDPX Module (`src/qdpx/`)
+Handles ZIP archive operations for QDPX project files:
+- **unpack.ts** - Extracts QDPX files using @zip-js/zip-js, provides async generator for entries and project.qde access
+- **pack.ts** - Creates QDPX archives with QDE validation, source file validation against REFI-QDA standards, and MIME type handling
+
+#### Supporting Files
+- **mod.ts** - Main entry point exposing `qde` and `qdpx` objects with their respective functions
+- **src/types.ts** - TypeScript type definitions including Result pattern and function return types
+- **src/schema.ts** - Zod schemas for strict QDE validation
+- **src/constants.ts** - Performance optimizations, element categorization, regex patterns, and caching
 
 ### Key Dependencies
 
-- **@xmldom/xmldom** - XML parsing (as specified by the user)
-- **zod** - Runtime schema validation
+- **@xmldom/xmldom** - XML parsing and serialization with proper DOM handling
+- **@zip-js/zip-js** - ZIP file operations for QDPX archive handling
+- **zod** - Runtime schema validation for QDE structures
 
-### Schema Validation
+### Result Pattern
 
-The library implements strict validation against the QDA-XML 1.0 specification found in docs/schema.xsd. Key validation patterns:
+All conversion functions use a consistent Result pattern for error handling:
+```typescript
+Result<T, E extends Error = Error> = [boolean, T | E]
+```
 
-- GUID format: `([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})|(\{[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}\})`
-- RGB colors: `#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})`
-- Elements requiring `_attributes` objects: Project, Code
-- Elements that must always be arrays per schema: User, Code, Variable, Case, etc.
+Success: `[true, data]`  
+Error: `[false, error]`
 
 ### Performance Optimizations
 
-- Singleton DOMParser for XML parsing
-- Value caching for common conversions
-- Pre-compiled regex patterns
-- Indent string caching for XML generation
-- Optimized attribute processing with batching
+#### XML Processing
+- Singleton DOMParser instance for reuse across conversions
+- Value caching for common attribute conversions (integers, floats)
+- Pre-compiled regex patterns for number detection
+- Optimized element categorization using Set lookups
+- Direct attribute indexing instead of iterator methods
 
-### Error Handling
+#### Memory Management
+- Static classes to avoid instance creation overhead
+- Shared constants and cached values
+- DOM-based XML generation for proper escaping without manual string operations
 
-Uses Result pattern: `Result<T, E extends Error = Error> = [T, null] | [null, E]`
+### REFI-QDA Compliance
 
-- XML parsing errors include detailed context
-- Schema validation failures preserve Zod error details
-- Type-safe error propagation throughout conversion pipeline
+The QDPX packing functionality validates source files against REFI-QDA standards:
+- Supported text: `.txt` (UTF-8), `.docx` (Office Open XML)
+- Supported images: `.jpg/.jpeg`, `.png`
+- Supported documents: `.pdf`
+- Recommended audio/video: `.m4a`, `.mp4`
+- Other formats stored as-is with warnings
 
 ## Code Style Notes
 
 - Uses strict TypeScript configuration with comprehensive compiler options
 - Follows Deno formatting standards (2-space indents, 120 char line width, semicolons)
 - Performance-focused implementations with static classes and caching
-- Comprehensive error handling with typed results pattern
+- Comprehensive error handling with typed Result pattern
+- Schema validation at conversion boundaries

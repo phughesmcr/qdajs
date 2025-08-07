@@ -1,12 +1,14 @@
-import { jsonToQde } from "./src/convert/jsonToXml.ts";
-import { qdeToJson } from "./src/convert/xmlToJson.ts";
+import { jsonToQde } from "./src/qde/jsonToXml.ts";
+import { validateQdeJson } from "./src/qde/validate.ts";
+import { qdeToJson } from "./src/qde/xmlToJson.ts";
+import { pack, type PackQdpxOptions, type SourceFile, type ValidationResult } from "./src/qdpx/pack.ts";
 import { type Entry, type QdpxUnpacker, unpack, type UnpackQdpxOptions } from "./src/qdpx/unpack.ts";
-import { pack, type PackQdpxOptions, type SourceFile } from "./src/qdpx/pack.ts";
-import type { JsonToQdeResult, QdeToJsonResult } from "./src/types.ts";
+import type { JsonToQdeResult, QdeToJsonResult, Result } from "./src/types.ts";
 
-export const convert = {
-  qdeToJson,
-  jsonToQde,
+export const qde = {
+  toJson: qdeToJson,
+  fromJson: jsonToQde,
+  validate: validateQdeJson,
 };
 
 export const qdpx = {
@@ -14,6 +16,16 @@ export const qdpx = {
   pack,
 };
 
-export default { convert, unpack };
+export default { qde, qdpx };
 
-export type { Entry, JsonToQdeResult, PackQdpxOptions, QdeToJsonResult, QdpxUnpacker, SourceFile, UnpackQdpxOptions };
+export type {
+  Entry,
+  JsonToQdeResult,
+  PackQdpxOptions,
+  QdeToJsonResult,
+  QdpxUnpacker,
+  Result,
+  SourceFile,
+  UnpackQdpxOptions,
+  ValidationResult,
+};

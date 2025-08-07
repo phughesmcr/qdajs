@@ -165,6 +165,11 @@ export const VALUE_CACHE = new Map<string, JsonValue>([
 export const EMPTY_OBJECT = {};
 export const FLOAT_REGEX = /^-?\d*\.\d+$/;
 export const INT_REGEX = /^-?\d+$/;
+export const guidPattern =
+  /^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})|(\{[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}\})$/;
+export const rgbPattern = /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/;
+export const isoDatePattern = /^\d{4}-\d{2}-\d{2}$/;
+export const isoDateTimePattern = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})?$/;
 
 // Pre-created error messages to avoid string operations during errors
 export const ERROR_NO_ROOT = "No root element found in QDE document";
@@ -182,3 +187,24 @@ export const XML_ESCAPE_MAP = new Map<string, string>([
 ]);
 
 export const XML_ESCAPE_REGEX = /[&<>"']/g;
+
+// QDE constants
+
+export const SHAPES = [
+  "Person",
+  "Oval",
+  "Rectangle",
+  "RoundedRectangle",
+  "Star",
+  "LeftTriangle",
+  "RightTriangle",
+  "UpTriangle",
+  "DownTriangle",
+  "Note",
+];
+
+export const DIRECTIONS = ["Associative", "OneWay", "Bidirectional"];
+
+export const VARIABLE_TYPES = ["Text", "Boolean", "Integer", "Float", "Date", "DateTime"];
+
+export const LINE_STYLES = ["dotted", "dashed", "solid"];

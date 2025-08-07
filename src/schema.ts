@@ -1,19 +1,23 @@
 import { z } from "zod/v4";
+import {
+  DIRECTIONS,
+  guidPattern,
+  isoDatePattern,
+  isoDateTimePattern,
+  LINE_STYLES,
+  rgbPattern,
+  SHAPES,
+  VARIABLE_TYPES,
+} from "./constants.ts";
 
-// @deno-fmt-ignore
-const guidPattern =
-  /^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})|(\{[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}\})$/;
-const rgbPattern = /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/;
-const isoDatePattern = /^\d{4}-\d{2}-\d{2}$/;
-// @deno-fmt-ignore
-const isoDateTimePattern =
-  /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})?$/;
+// Enums
+const shapeEnum = z.enum(SHAPES);
+const directionEnum = z.enum(DIRECTIONS);
 
 // Common field schemas
 const guidField = z.string().regex(guidPattern, "Must be a valid GUID");
 const optionalGuidField = guidField.optional();
-const dateTimeField = z.string().regex(isoDateTimePattern, "Must be a valid ISO 8601 datetime")
-  .optional();
+const dateTimeField = z.string().regex(isoDateTimePattern, "Must be a valid ISO 8601 datetime").optional();
 const colorField = z.string().regex(rgbPattern, "Must be a valid RGB color").optional();
 
 // Common metadata fields shared across entities
@@ -33,11 +37,11 @@ const baseEntity = z.object({
   ...commonMetadata,
 });
 
-export const refSchema = z.object({
+const refSchema = z.object({
   targetGUID: guidField,
 });
 
-export const codingSchema = z.object({
+const codingSchema = z.object({
   guid: guidField,
   creatingUser: optionalGuidField,
   creationDateTime: dateTimeField,
@@ -45,7 +49,7 @@ export const codingSchema = z.object({
   NoteRef: z.array(refSchema).optional(),
 });
 
-export const codeSchema: z.ZodType<unknown> = z.lazy(() =>
+const codeSchema = z.lazy(() =>
   z.object({
     _attributes: z.object({
       guid: guidField,
@@ -59,19 +63,19 @@ export const codeSchema: z.ZodType<unknown> = z.lazy(() =>
   })
 );
 
-export const codeBookSchema = z.object({
+const codeBookSchema = z.object({
   Codes: z.object({
     Code: z.array(codeSchema),
   }),
 });
 
-export const userSchema = z.object({
+const userSchema = z.object({
   guid: guidField,
   name: z.string().optional(),
   id: z.string().optional(),
 });
 
-export const usersSchema = z.object({
+const usersSchema = z.object({
   User: z.array(userSchema),
 });
 
@@ -79,12 +83,12 @@ const baseSelectionSchema = baseEntity.extend({
   Coding: z.array(codingSchema).optional(),
 });
 
-export const plainTextSelectionSchema = baseSelectionSchema.extend({
+const plainTextSelectionSchema = baseSelectionSchema.extend({
   startPosition: z.number().int(),
   endPosition: z.number().int(),
 });
 
-export const variableValueSchema = z
+const variableValueSchema = z
   .object({
     VariableRef: refSchema,
     TextValue: z.string().optional(),
@@ -108,7 +112,7 @@ const baseSourceSchema = baseEntity.extend({
   VariableValue: z.array(z.lazy(() => variableValueSchema)).optional(),
 });
 
-export const textSourceSchema = baseSourceSchema.extend({
+const textSourceSchema = baseSourceSchema.extend({
   richTextPath: z.string().optional(),
   plainTextPath: z.string().optional(),
   PlainTextContent: z.string().optional(),
@@ -127,29 +131,29 @@ const timeRangeSchema = {
   end: z.number().int(),
 };
 
-export const pictureSelectionSchema = baseSelectionSchema.extend(coordinatesSchema);
+const pictureSelectionSchema = baseSelectionSchema.extend(coordinatesSchema);
 
-export const pdfSelectionSchema = baseSelectionSchema.extend({
+const pdfSelectionSchema = baseSelectionSchema.extend({
   page: z.number().int(),
   ...coordinatesSchema,
   Representation: z.lazy(() => textSourceSchema).optional(),
 });
 
-export const audioSelectionSchema = baseSelectionSchema.extend(timeRangeSchema);
-export const videoSelectionSchema = baseSelectionSchema.extend(timeRangeSchema);
+const audioSelectionSchema = baseSelectionSchema.extend(timeRangeSchema);
+const videoSelectionSchema = baseSelectionSchema.extend(timeRangeSchema);
 
-export const syncPointSchema = z.object({
+const syncPointSchema = z.object({
   guid: guidField,
   timeStamp: z.number().int().optional(),
   position: z.number().int().optional(),
 });
 
-export const transcriptSelectionSchema = baseSelectionSchema.extend({
+const transcriptSelectionSchema = baseSelectionSchema.extend({
   fromSyncPoint: optionalGuidField,
   toSyncPoint: optionalGuidField,
 });
 
-export const transcriptSchema = baseEntity.extend({
+const transcriptSchema = baseEntity.extend({
   richTextPath: z.string().optional(),
   plainTextPath: z.string().optional(),
   PlainTextContent: z.string().optional(),
@@ -157,27 +161,27 @@ export const transcriptSchema = baseEntity.extend({
   TranscriptSelection: z.array(transcriptSelectionSchema).optional(),
 });
 
-export const pictureSourceSchema = baseSourceSchema.extend({
+const pictureSourceSchema = baseSourceSchema.extend({
   TextDescription: textSourceSchema.optional(),
   PictureSelection: z.array(pictureSelectionSchema).optional(),
 });
 
-export const pdfSourceSchema = baseSourceSchema.extend({
+const pdfSourceSchema = baseSourceSchema.extend({
   PDFSelection: z.array(pdfSelectionSchema).optional(),
   Representation: textSourceSchema.optional(),
 });
 
-export const audioSourceSchema = baseSourceSchema.extend({
+const audioSourceSchema = baseSourceSchema.extend({
   Transcript: z.array(transcriptSchema).optional(),
   AudioSelection: z.array(audioSelectionSchema).optional(),
 });
 
-export const videoSourceSchema = baseSourceSchema.extend({
+const videoSourceSchema = baseSourceSchema.extend({
   Transcript: z.array(transcriptSchema).optional(),
   VideoSelection: z.array(videoSelectionSchema).optional(),
 });
 
-export const sourcesSchema = z.object({
+const sourcesSchema = z.object({
   TextSource: z.array(textSourceSchema).optional(),
   PictureSource: z.array(pictureSourceSchema).optional(),
   PDFSource: z.array(pdfSourceSchema).optional(),
@@ -185,18 +189,18 @@ export const sourcesSchema = z.object({
   VideoSource: z.array(videoSourceSchema).optional(),
 });
 
-export const variableSchema = z.object({
+const variableSchema = z.object({
   guid: guidField,
   name: z.string(),
-  typeOfVariable: z.enum(["Text", "Boolean", "Integer", "Float", "Date", "DateTime"]),
+  typeOfVariable: z.enum(VARIABLE_TYPES),
   Description: z.string().optional(),
 });
 
-export const variablesSchema = z.object({
+const variablesSchema = z.object({
   Variable: z.array(variableSchema).optional(),
 });
 
-export const caseSchema = z.object({
+const caseSchema = z.object({
   guid: guidField,
   name: z.string().optional(),
   Description: z.string().optional(),
@@ -206,11 +210,11 @@ export const caseSchema = z.object({
   SelectionRef: z.array(refSchema).optional(),
 });
 
-export const casesSchema = z.object({
+const casesSchema = z.object({
   Case: z.array(caseSchema).optional(),
 });
 
-export const setSchema = z.object({
+const setSchema = z.object({
   guid: guidField,
   name: z.string(),
   Description: z.string().optional(),
@@ -219,26 +223,11 @@ export const setSchema = z.object({
   MemberNote: z.array(refSchema).optional(),
 });
 
-export const setsSchema = z.object({
+const setsSchema = z.object({
   Set: z.array(setSchema).optional(),
 });
 
-const shapeEnum = z.enum([
-  "Person",
-  "Oval",
-  "Rectangle",
-  "RoundedRectangle",
-  "Star",
-  "LeftTriangle",
-  "RightTriangle",
-  "UpTriangle",
-  "DownTriangle",
-  "Note",
-]);
-
-const directionEnum = z.enum(["Associative", "OneWay", "Bidirectional"]);
-
-export const vertexSchema = z.object({
+const vertexSchema = z.object({
   guid: guidField,
   representedGUID: optionalGuidField,
   name: z.string().optional(),
@@ -250,7 +239,7 @@ export const vertexSchema = z.object({
   color: colorField,
 });
 
-export const edgeSchema = z.object({
+const edgeSchema = z.object({
   guid: guidField,
   representedGUID: optionalGuidField,
   name: z.string().optional(),
@@ -258,21 +247,21 @@ export const edgeSchema = z.object({
   targetVertex: guidField,
   color: colorField,
   direction: directionEnum.optional(),
-  lineStyle: z.enum(["dotted", "dashed", "solid"]).optional(),
+  lineStyle: z.enum(LINE_STYLES).optional(),
 });
 
-export const graphSchema = z.object({
+const graphSchema = z.object({
   guid: guidField,
   name: z.string().optional(),
   Vertex: z.array(vertexSchema).optional(),
   Edge: z.array(edgeSchema).optional(),
 });
 
-export const graphsSchema = z.object({
+const graphsSchema = z.object({
   Graph: z.array(graphSchema).optional(),
 });
 
-export const linkSchema = z.object({
+const linkSchema = z.object({
   guid: guidField,
   name: z.string().optional(),
   direction: directionEnum.optional(),
@@ -282,36 +271,40 @@ export const linkSchema = z.object({
   NoteRef: z.array(refSchema).optional(),
 });
 
-export const linksSchema = z.object({
+const linksSchema = z.object({
   Link: z.array(linkSchema).optional(),
 });
 
-export const notesSchema = z.object({
+const notesSchema = z.object({
   Note: z.array(textSourceSchema).optional(),
 });
 
-export const projectSchema = z.object({
-  _attributes: z.object({
-    name: z.string(),
-    origin: z.string().optional(),
-    creatingUserGUID: optionalGuidField,
-    creationDateTime: dateTimeField,
-    modifyingUserGUID: optionalGuidField,
-    modifiedDateTime: dateTimeField,
-    basePath: z.string().optional(),
-    xmlns: z.string().optional(),
-    "xmlns:xsi": z.string().optional(),
-    "xsi:schemaLocation": z.string().optional(),
-  }),
-  Users: usersSchema.optional(),
-  CodeBook: codeBookSchema.optional(),
-  Variables: variablesSchema.optional(),
-  Cases: casesSchema.optional(),
-  Sources: sourcesSchema.optional(),
-  Notes: notesSchema.optional(),
-  Links: linksSchema.optional(),
-  Sets: setsSchema.optional(),
-  Graphs: graphsSchema.optional(),
-  Description: z.string().optional(),
-  NoteRef: z.array(refSchema).optional(),
-});
+export const projectSchema: z.ZodType<unknown> = z.lazy(() =>
+  z.object({
+    _attributes: z.object({
+      name: z.string(),
+      origin: z.string().optional(),
+      creatingUserGUID: optionalGuidField,
+      creationDateTime: dateTimeField,
+      modifyingUserGUID: optionalGuidField,
+      modifiedDateTime: dateTimeField,
+      basePath: z.string().optional(),
+      xmlns: z.string().optional(),
+      "xmlns:xsi": z.string().optional(),
+      "xsi:schemaLocation": z.string().optional(),
+    }),
+    Users: usersSchema.optional(),
+    CodeBook: codeBookSchema.optional(),
+    Variables: variablesSchema.optional(),
+    Cases: casesSchema.optional(),
+    Sources: sourcesSchema.optional(),
+    Notes: notesSchema.optional(),
+    Links: linksSchema.optional(),
+    Sets: setsSchema.optional(),
+    Graphs: graphsSchema.optional(),
+    Description: z.string().optional(),
+    NoteRef: z.array(refSchema).optional(),
+  })
+);
+
+export type Project = z.infer<typeof projectSchema>;

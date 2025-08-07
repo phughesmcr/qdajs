@@ -1,13 +1,14 @@
 import { type Document, DOMImplementation, type Element, XMLSerializer } from "@xmldom/xmldom";
+
 import { elementFields } from "../constants.ts";
-import { projectSchema } from "../schema.ts";
+import type { Project } from "../schema.ts";
 import type { JsonToQdeResult, QdeToJsonResult } from "../types.ts";
+import { validateQdeJson } from "./validate.ts";
 
 // Pre-created error messages to avoid string operations during errors
 const ERROR_INVALID_INPUT = "Invalid input: expected object with QDE data";
 const ERROR_INVALID_QDE_FIELD = "Invalid QDE data: qde field must be an object";
 const ERROR_ROOT_NOT_OBJECT = "Root data must be an object";
-const ERROR_SCHEMA_VALIDATION = "Schema validation failed";
 
 /**
  * High-performance JSON to XML converter using DOM construction and serializeToString
@@ -154,7 +155,7 @@ class JsonToXmlConverter {
  * @param json - JSON data to convert (normalized or raw)
  * @returns Result tuple with XML string or detailed error information
  */
-export function jsonToQde(json: Record<string, unknown> | QdeToJsonResult): JsonToQdeResult {
+export function jsonToQde(json: Project | QdeToJsonResult): JsonToQdeResult {
   try {
     // Input validation with specific error messages
     if (typeof json !== "object" || json === null) {
@@ -174,12 +175,9 @@ export function jsonToQde(json: Record<string, unknown> | QdeToJsonResult): Json
       rawData = json as Record<string, unknown>;
     }
 
-    const validationResult = projectSchema.safeParse(rawData);
-    if (!validationResult.success) {
-      return [
-        false,
-        new Error(ERROR_SCHEMA_VALIDATION, { cause: validationResult.error }),
-      ];
+    const [valid, error] = validateQdeJson(rawData);
+    if (!valid) {
+      return [false, error];
     }
 
     const xmlString = JsonToXmlConverter.toXml(rawData, "Project");

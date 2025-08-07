@@ -1,8 +1,8 @@
 /// <reference lib="deno.ns" />
 
 import { assert, assertEquals, assertExists } from "@std/assert";
-import { jsonToQde } from "../src/convert/jsonToXml.ts";
-import { qdeToJson } from "../src/convert/xmlToJson.ts";
+import { qde } from "../mod.ts";
+const { fromJson, toJson } = qde;
 
 const QDE_FILE = "./docs/example.qde";
 const JSON_FILE = "./docs/example.json";
@@ -58,7 +58,7 @@ function assertDeepDataIntegrity(actual: any, expected: any, path: string = "roo
 Deno.test("QDE Conversion Integration Tests", async (t) => {
   await t.step("should successfully convert XML to JSON", async () => {
     const qdeXml = await Deno.readTextFile(QDE_FILE);
-    const [ok, result] = qdeToJson(qdeXml);
+    const [ok, result] = toJson(qdeXml);
 
     assert(ok, `XML to JSON conversion failed: ${result}`);
     assertExists(result, "Conversion result should contain data");
@@ -70,12 +70,12 @@ Deno.test("QDE Conversion Integration Tests", async (t) => {
 
   await t.step("should successfully convert JSON back to XML", async () => {
     const qdeXml = await Deno.readTextFile(QDE_FILE);
-    const [jsonOk, jsonResult] = qdeToJson(qdeXml);
+    const [jsonOk, jsonResult] = toJson(qdeXml);
 
     assert(jsonOk, "Initial XML to JSON conversion failed");
     assertExists(jsonResult.qde, "JSON conversion should have data");
 
-    const [xmlOk, xmlResult] = jsonToQde(jsonResult);
+    const [xmlOk, xmlResult] = fromJson(jsonResult);
     assert(xmlOk, `JSON to XML conversion failed: ${xmlResult}`);
     assertExists(xmlResult.qde, "XML conversion result should contain XML string");
 
@@ -88,17 +88,17 @@ Deno.test("QDE Conversion Integration Tests", async (t) => {
     const originalXml = await Deno.readTextFile(QDE_FILE);
 
     // XML -> JSON
-    const [jsonOk, jsonResult] = qdeToJson(originalXml);
+    const [jsonOk, jsonResult] = toJson(originalXml);
     assert(jsonOk, "Initial XML to JSON conversion failed");
     assertExists(jsonResult.qde, "JSON result should have data");
 
     // JSON -> XML
-    const [xmlOk, xmlResult] = jsonToQde(jsonResult);
+    const [xmlOk, xmlResult] = fromJson(jsonResult);
     assert(xmlOk, "JSON to XML conversion failed");
     assertExists(xmlResult.qde, "XML result should have XML string");
 
     // Convert back to JSON to compare structure
-    const [secondJsonOk, secondJsonResult] = qdeToJson(xmlResult.qde);
+    const [secondJsonOk, secondJsonResult] = toJson(xmlResult.qde);
     assert(secondJsonOk, "Second XML to JSON conversion failed");
     assertExists(secondJsonResult.qde, "Second JSON result should have data");
 
@@ -122,7 +122,7 @@ Deno.test("QDE Conversion Integration Tests", async (t) => {
     const originalXml = await Deno.readTextFile(QDE_FILE);
     const expectedJson = JSON.parse(await Deno.readTextFile(JSON_FILE));
 
-    const [ok, result] = qdeToJson(originalXml);
+    const [ok, result] = toJson(originalXml);
     assert(ok, "XML to JSON conversion failed");
     assertExists(result.qde, "Conversion should produce data");
 
@@ -135,7 +135,7 @@ Deno.test("QDE Conversion Integration Tests", async (t) => {
       const expectedJson = JSON.parse(await Deno.readTextFile("./test/example.json"));
       const qdeXml = await Deno.readTextFile(QDE_FILE);
 
-      const [ok, result] = qdeToJson(qdeXml);
+      const [ok, result] = toJson(qdeXml);
       assert(ok, "XML to JSON conversion failed");
       assertExists(result.qde, "Conversion should produce data");
 
@@ -162,22 +162,22 @@ Deno.test("QDE Conversion Integration Tests", async (t) => {
 
   await t.step("should handle error cases gracefully", async () => {
     // Test invalid XML
-    const [invalidXmlOk, invalidXmlError] = qdeToJson("<invalid>xml");
+    const [invalidXmlOk, invalidXmlError] = toJson("<invalid>xml");
     assert(!invalidXmlOk, "Should fail on invalid XML");
     assertExists(invalidXmlError, "Should provide error message");
 
     // Test invalid JSON structure
-    const [invalidJsonOk, invalidJsonError] = jsonToQde({ qde: "invalid" });
+    const [invalidJsonOk, invalidJsonError] = fromJson({ qde: "invalid" });
     assert(!invalidJsonOk, "Should fail on invalid JSON structure");
     assertExists(invalidJsonError, "Should provide error message");
   });
 
   await t.step("should validate XML output format", async () => {
     const qdeXml = await Deno.readTextFile(QDE_FILE);
-    const [jsonOk, jsonResult] = qdeToJson(qdeXml);
+    const [jsonOk, jsonResult] = toJson(qdeXml);
     assert(jsonOk, "XML to JSON conversion failed");
 
-    const [xmlOk, xmlResult] = jsonToQde(jsonResult);
+    const [xmlOk, xmlResult] = fromJson(jsonResult);
     assert(xmlOk, "JSON to XML conversion failed");
     assertExists(xmlResult.qde, "Should produce XML output");
 
@@ -191,7 +191,7 @@ Deno.test("QDE Conversion Integration Tests", async (t) => {
     assert(xml.includes("</Project>"), "Should have closing Project tag");
 
     // Validate XML is well-formed by attempting to parse it back
-    const [reParseOk] = qdeToJson(xml);
+    const [reParseOk] = toJson(xml);
     assert(reParseOk, "Generated XML should be parseable");
   });
 });

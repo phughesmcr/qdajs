@@ -1,20 +1,18 @@
 import { DOMParser, type Element } from "@xmldom/xmldom";
+
 import {
   alwaysArrays,
   elementsWithAttributes,
   EMPTY_OBJECT,
-  ERROR_INVALID_PROJECT,
-  ERROR_MISSING_NAME,
   ERROR_NO_ROOT,
-  ERROR_SCHEMA_FAILED,
   FLOAT_REGEX,
   INT_REGEX,
   referenceElements,
   simpleTextElements,
   VALUE_CACHE,
 } from "../constants.ts";
-import { projectSchema } from "../schema.ts";
 import type { QdeToJsonResult } from "../types.ts";
+import { validateQdeJson } from "./validate.ts";
 
 class XmlToJsonParser {
   // Singleton parser instance for reuse
@@ -183,29 +181,7 @@ class XmlToJsonParser {
 export function qdeToJson(xmlString: string): QdeToJsonResult {
   try {
     const json = XmlToJsonParser.parse(xmlString);
-
-    if (typeof json !== "object" || json === null || Array.isArray(json)) {
-      return [false, new Error(ERROR_INVALID_PROJECT)];
-    }
-
-    const project = json as Record<string, unknown>;
-    const attrs = project["_attributes"] as Record<string, unknown>;
-    if (attrs && !("name" in attrs)) {
-      return [
-        false,
-        new Error(ERROR_MISSING_NAME),
-      ];
-    }
-
-    const validationResult = projectSchema.safeParse(project);
-    if (!validationResult.success) {
-      return [
-        false,
-        new Error(ERROR_SCHEMA_FAILED, { cause: validationResult.error }),
-      ];
-    }
-
-    return [true, { qde: validationResult.data }];
+    return validateQdeJson(json);
   } catch (error) {
     return [
       false,
