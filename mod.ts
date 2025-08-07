@@ -16,7 +16,7 @@
  * const [valid, xml] = qde.fromJson(jsonData);
  *
  * // Unpack QDPX archive
- * const unpacker = await qdpx.unpack("project.qdpx");
+ * const [unpackOk, unpacker] = await qdpx.unpack("project.qdpx");
  * ```
  */
 
@@ -77,8 +77,10 @@ export const qde = {
  * @example
  * ```typescript
  * // Unpack QDPX archive
- * const unpacker = await qdpx.unpack("project.qdpx");
- * const projectQde = await unpacker.getProjectQde();
+ * const [unpackOk, unpacker] = await qdpx.unpack("project.qdpx");
+ * if (unpackOk) {
+ *   const projectQde = await unpacker.getProjectQde();
+ * }
  *
  * // Pack new QDPX archive
  * const result = await qdpx.pack({
