@@ -1,3 +1,18 @@
+/**
+ * @module Performance Optimizations and Constants
+ *
+ * Core constants, performance optimizations, and caching mechanisms for QDAJS library.
+ * Contains schema-aware element categorization, value caches, regex patterns, and
+ * domain-specific constants for efficient QDE/QDPX processing.
+ *
+ * Key optimizations:
+ * - Pre-compiled regex patterns for number/date detection
+ * - Value caching for common attribute conversions
+ * - Element categorization using Sets for O(1) lookups
+ * - Static error messages to avoid string operations
+ * - Schema-aware attribute vs element decisions
+ */
+
 import type { JsonValue } from "./types.ts";
 
 /** Schema-aware performance optimization sets */

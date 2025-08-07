@@ -1,3 +1,18 @@
+/**
+ * @module QDE JSON to XML Conversion
+ *
+ * High-performance JSON to XML converter for QDE (Qualitative Data Exchange) files.
+ * Uses DOM construction with XMLSerializer for proper escaping and formatting.
+ * Optimized for large QDA-XML files with static methods, DOM caching, and schema-aware conversion.
+ *
+ * Key features:
+ * - Singleton DOMImplementation for reuse
+ * - Schema-aware attribute vs element decisions
+ * - Proper XML escaping via DOM methods
+ * - Support for both normalized and raw JSON formats
+ * - Comprehensive validation integration
+ */
+
 import { type Document, DOMImplementation, type Element, XMLSerializer } from "@xmldom/xmldom";
 
 import { elementFields } from "../constants.ts";
@@ -151,9 +166,28 @@ class JsonToXmlConverter {
 
 /**
  * Convert JSON data to QDE XML format with comprehensive validation
- * Supports both normalized data ({ qde: data }) and raw JSON objects
- * @param json - JSON data to convert (normalized or raw)
- * @returns Result tuple with XML string or detailed error information
+ *
+ * Converts validated JSON data to properly formatted QDE XML with comprehensive error handling.
+ * Supports both normalized data ({ qde: data }) and raw JSON objects. Includes automatic
+ * schema validation before conversion.
+ *
+ * @param json - JSON data to convert, either Project schema or normalized {qde: data} format
+ * @returns Result tuple: [true, {qde: xmlString}] on success, [false, Error] on failure
+ *
+ * @example
+ * ```typescript
+ * // Using raw project data
+ * const projectData = { Sources: [...], CodeBook: [...] };
+ * const [success, result] = jsonToQde(projectData);
+ *
+ * // Using normalized format
+ * const normalized = { qde: projectData };
+ * const [success, result] = jsonToQde(normalized);
+ *
+ * if (success) {
+ *   console.log('Generated XML:', result.qde);
+ * }
+ * ```
  */
 export function jsonToQde(json: Project | QdeToJsonResult): JsonToQdeResult {
   try {

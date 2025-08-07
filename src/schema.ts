@@ -1,3 +1,18 @@
+/**
+ * @module QDE Schema Definitions
+ *
+ * Comprehensive Zod schema definitions for QDE (Qualitative Data Exchange) data structures.
+ * Provides runtime validation for QDA project data including sources, codes, users, cases,
+ * variables, notes, links, sets, and graphs according to REFI-QDA standards.
+ *
+ * Key features:
+ * - Complete QDE XML schema validation
+ * - Type-safe Project interface generation
+ * - Support for nested recursive structures (codes, lazy evaluation)
+ * - Validation of GUIDs, dates, colors, and domain-specific constraints
+ * - XSD choice constraint enforcement for variable values
+ */
+
 import { z } from "zod/v4";
 import {
   DIRECTIONS,

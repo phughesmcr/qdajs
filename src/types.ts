@@ -1,3 +1,14 @@
+/**
+ * @module Type Definitions
+ *
+ * Core TypeScript type definitions for QDAJS library.
+ * Defines result patterns, JSON value types, and function return types
+ * used throughout the QDE/QDPX processing pipeline.
+ *
+ * Uses a consistent Result pattern for error handling across all
+ * conversion and validation functions, providing type-safe success/error states.
+ */
+
 import type { ZodError } from "zod";
 
 import type { Project } from "./schema.ts";

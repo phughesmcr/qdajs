@@ -1,8 +1,14 @@
 /**
- * Unzip a QDPX file
- * @module
+ * @module QDPX Archive Unpacking
+ *
+ * QDPX unpacking module for extracting QDE projects and source files from ZIP archives.
+ * Provides async access to project.qde files and source file extraction with proper
+ * resource management and error handling.
+ *
+ * Uses @zip-js/zip-js for efficient ZIP file processing with streaming support
+ * for large archives and memory-conscious extraction.
  */
-import { BlobReader, type Entry, ZipReader } from "@zip-js/zip-js";
+import { BlobReader, type Entry, terminateWorkers, ZipReader } from "@zip-js/zip-js";
 
 import type { Result } from "../types.ts";
 
@@ -48,6 +54,37 @@ async function* extractAll(entries: Entry[]): AsyncGenerator<ArrayBuffer> {
   }
 }
 
+/**
+ * Unpack QDPX archive file and provide access to contents
+ *
+ * Creates a QdpxUnpacker instance for accessing QDPX archive contents including
+ * project.qde file and source files. Handles ZIP file reading with proper error
+ * handling and resource management.
+ *
+ * @param input - QDPX file as Blob (from file input or fetch)
+ * @param opts - Optional unpacking configuration (password, encoding, abort signal)
+ * @returns Result tuple: [true, QdpxUnpacker] on success, [false, Error] on failure
+ *
+ * @example
+ * ```typescript
+ * // Unpack from file input
+ * const file = event.target.files[0];
+ * const [success, unpacker] = await unpack(file);
+ *
+ * if (success) {
+ *   // Read project QDE
+ *   const projectXml = await unpacker.readProjectQde();
+ *
+ *   // Extract all files
+ *   for await (const fileData of unpacker.extractAll()) {
+ *     console.log('Extracted file:', fileData.byteLength);
+ *   }
+ *
+ *   // Clean up resources
+ *   await unpacker.close();
+ * }
+ * ```
+ */
 export async function unpack(input: Blob, opts: UnpackQdpxOptions = {}): Promise<Result<QdpxUnpacker>> {
   try {
     const zipReader = getZip(input, opts);
@@ -58,7 +95,10 @@ export async function unpack(input: Blob, opts: UnpackQdpxOptions = {}): Promise
       },
       readProjectQde: () => getProject(entries),
       extractAll: () => extractAll(entries),
-      close: async () => await zipReader.close(),
+      close: async () => {
+        await terminateWorkers();
+        await zipReader.close();
+      },
     };
     return [true, unpacker];
   } catch (error) {

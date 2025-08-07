@@ -1,4 +1,21 @@
-import { BlobReader, BlobWriter, TextReader, ZipWriter } from "@zip-js/zip-js";
+/**
+ * @module QDPX Archive Packing
+ *
+ * QDPX packing module for creating QDE project archives with source files.
+ * Provides comprehensive validation, REFI-QDA compliance checking, and efficient
+ * ZIP file creation with proper MIME type handling.
+ *
+ * Features REFI-QDA standard validation for supported file formats:
+ * - Text: .txt (UTF-8), .docx (Office Open XML)
+ * - Images: .jpg/.jpeg, .png
+ * - Documents: .pdf
+ * - Audio/Video: .m4a, .mp4 (recommended), others stored as-is
+ *
+ * Automatically organizes files in proper QDPX structure with project.qde
+ * at root and source files in sources/ directory.
+ */
+
+import { BlobReader, BlobWriter, terminateWorkers, TextReader, ZipWriter } from "@zip-js/zip-js";
 
 import { jsonToQde } from "../qde/jsonToXml.ts";
 import { validateQdeJson } from "../qde/validate.ts";
@@ -197,7 +214,7 @@ async function zip(
   return zipFileWriter.getData();
 }
 
-function validateProject(qde: Project): Project {
+function validateProject(qde: unknown): Project {
   // if qde is a string, convert to Project
   if (typeof qde === "string") {
     const [xmlValid, xmlResult] = qdeToJson(qde);
@@ -207,16 +224,58 @@ function validateProject(qde: Project): Project {
     return xmlResult.qde as Project;
   } else {
     // if qde is a Project, validate it
-    const [valid, error] = validateQdeJson(qde);
+    const [valid, result] = validateQdeJson(qde);
     if (!valid) {
-      throw new Error(`Invalid project.qde: ${error}`);
+      throw new Error(`Invalid project.qde: ${result.message}`);
     }
-    return qde;
+    return result.qde;
   }
 }
 
-export function pack(
-  qde: Project | string,
+/**
+ * Pack QDE project and source files into QDPX archive
+ *
+ * Creates a QDPX archive containing the QDE project file and associated source files.
+ * Includes comprehensive validation of project data and source files against REFI-QDA
+ * standards. Automatically converts Project objects to XML format.
+ *
+ * @param qde - QDE project data (Project object or XML string)
+ * @param sources - Array of source files to include in the archive
+ * @param opts - Packing options including validation settings and ZIP parameters
+ * @returns Promise resolving to Blob containing the QDPX archive
+ *
+ * @example
+ * ```typescript
+ * // Pack with Project object
+ * const project = {
+ *   _attributes: { name: "My Project" },
+ *   Sources: [],
+ *   CodeBook: []
+ * };
+ *
+ * const sourceFiles = [
+ *   {
+ *     path: "interview.txt",
+ *     content: "Interview transcript...",
+ *     mimeType: "text/plain"
+ *   }
+ * ];
+ *
+ * const qdpxBlob = await pack(project, sourceFiles, {
+ *   validateProjectQde: true,
+ *   validateSources: true
+ * });
+ *
+ * // Save to file
+ * const url = URL.createObjectURL(qdpxBlob);
+ * const link = document.createElement('a');
+ * link.href = url;
+ * link.download = 'project.qdpx';
+ * link.click();
+ * ```
+ */
+export async function pack(
+  qde: unknown,
   sources: SourceFile[] = [],
   opts: PackQdpxOptions = {},
 ): Promise<Blob> {
@@ -246,7 +305,11 @@ export function pack(
     }
   }
 
-  return zip(qde as string, sources, opts);
+  const blob = await zip(qde as string, sources, opts);
+
+  await terminateWorkers();
+
+  return blob;
 }
 
 export default pack;

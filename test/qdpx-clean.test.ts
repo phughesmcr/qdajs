@@ -1,6 +1,6 @@
 /// <reference lib="deno.ns" />
 
-import { assert, assertEquals, assertExists, assertThrows } from "@std/assert";
+import { assert, assertEquals, assertExists, assertRejects } from "@std/assert";
 import { configure } from "@zip-js/zip-js";
 import { qde, qdpx } from "../mod.ts";
 import type { SourceFile } from "../src/qdpx/pack.ts";
@@ -149,7 +149,7 @@ Deno.test("QDPX Error Handling Tests", async (t) => {
     const invalidQdeJson = { invalid: "structure" };
     const sourceFiles = createResearchSourceFiles().slice(0, 1);
 
-    assertThrows(
+    await assertRejects(
       () => pack(invalidQdeJson, sourceFiles),
       Error,
       "Invalid project.qde",
@@ -180,7 +180,7 @@ Deno.test("QDPX Error Handling Tests", async (t) => {
       },
     ];
 
-    assertThrows(
+    await assertRejects(
       () => pack(qdeJson.qde as Record<string, unknown>, invalidFiles, { validateSources: true }),
       Error,
       "Invalid source file",
@@ -202,7 +202,7 @@ Deno.test("QDPX Error Handling Tests", async (t) => {
       },
     ];
 
-    assertThrows(
+    await assertRejects(
       () => pack(qdeJson.qde as Record<string, unknown>, nestedPathFiles, { validateSources: true }),
       Error,
       "flat",

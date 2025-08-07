@@ -1,3 +1,18 @@
+/**
+ * @module QDE XML to JSON Conversion
+ *
+ * High-performance XML parsing module for QDE (Qualitative Data Exchange) files.
+ * Uses optimized DOM parsing with singleton patterns, value caching, and schema-aware conversion
+ * for efficient processing of large QDA-XML files.
+ *
+ * Key optimizations:
+ * - Singleton DOMParser instance for reuse
+ * - Value caching for common attribute conversions
+ * - Direct attribute indexing instead of iterator methods
+ * - Schema-aware element categorization
+ * - Fast path processing for reference elements
+ */
+
 import { DOMParser, type Element } from "@xmldom/xmldom";
 
 import {
@@ -170,7 +185,23 @@ class XmlToJsonParser {
 
 /**
  * Parse and validate QDE project file using schema validation
- * Returns success/error result with parsed data or validation errors
+ *
+ * Converts QDE XML content to a validated JSON object with comprehensive error handling.
+ * Uses optimized XML parsing and automatic schema validation.
+ *
+ * @param xmlString - QDE XML content as string
+ * @returns Result tuple: [true, {qde: jsonData}] on success, [false, Error] on failure
+ *
+ * @example
+ * ```typescript
+ * const xmlContent = '<Project><Sources>...</Sources></Project>';
+ * const [success, result] = qdeToJson(xmlContent);
+ * if (success) {
+ *   console.log('Project data:', result.qde);
+ * } else {
+ *   console.error('Parse error:', result.message);
+ * }
+ * ```
  */
 export function qdeToJson(xmlString: string): QdeToJsonResult {
   try {
