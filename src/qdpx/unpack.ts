@@ -2,12 +2,9 @@
  * Unzip a QDPX file
  * @module
  */
-import { BlobReader, configure, type Entry, ZipReader } from "@zip-js/zip-js";
+import { BlobReader, type Entry, ZipReader } from "@zip-js/zip-js";
 
 import type { Result } from "../types.ts";
-
-// Configure zip.js to disable web workers to avoid timer leaks in Deno tests
-configure({ useWebWorkers: false });
 
 export type { Entry };
 

@@ -177,17 +177,6 @@ export const ERROR_INVALID_PROJECT = "Invalid QDE project: root element must be 
 export const ERROR_MISSING_NAME = "Invalid QDE project: missing Project element or name attribute";
 export const ERROR_SCHEMA_FAILED = "Schema validation failed";
 
-// Pre-compiled character escape map for XML
-export const XML_ESCAPE_MAP = new Map<string, string>([
-  ["&", "&amp;"],
-  ["<", "&lt;"],
-  [">", "&gt;"],
-  ['"', "&quot;"],
-  ["'", "&apos;"],
-]);
-
-export const XML_ESCAPE_REGEX = /[&<>"']/g;
-
 // QDE constants
 
 export const SHAPES = [

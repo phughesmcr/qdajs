@@ -8,7 +8,6 @@ import {
   FLOAT_REGEX,
   INT_REGEX,
   referenceElements,
-  simpleTextElements,
   VALUE_CACHE,
 } from "../constants.ts";
 import type { QdeToJsonResult } from "../types.ts";
@@ -58,12 +57,7 @@ class XmlToJsonParser {
       element.childNodes.length === 1 &&
       element.firstChild?.nodeType === 3
     ) {
-      const textContent = element.firstChild.textContent || "";
-      // Fast path for simple text elements
-      if (simpleTextElements.has(tagName)) {
-        return textContent;
-      }
-      return textContent;
+      return element.firstChild.textContent || "";
     }
 
     // Early exit for completely empty elements

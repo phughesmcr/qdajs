@@ -1,10 +1,13 @@
 /// <reference lib="deno.ns" />
 
 import { assert, assertEquals, assertExists } from "@std/assert";
+import { configure } from "@zip-js/zip-js";
 import { qde, qdpx } from "../mod.ts";
 
 const EXAMPLE_QDPX_FILE = "./docs/example.qdpx";
 const TEST_OUTPUT_DIR = "./test/temp_e2e";
+
+configure({ useWebWorkers: false });
 
 /**
  * End-to-end test that performs the complete cycle:

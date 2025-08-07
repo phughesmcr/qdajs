@@ -1,11 +1,14 @@
 /// <reference lib="deno.ns" />
 
 import { assert, assertEquals, assertExists } from "@std/assert";
+import { configure } from "@zip-js/zip-js";
 import { qde, qdpx } from "../mod.ts";
 import type { SourceFile } from "../src/qdpx/pack.ts";
 
 const { pack, unpack } = qdpx;
 const EXAMPLE_QDE_FILE = "./docs/example.qde";
+
+configure({ useWebWorkers: false });
 
 Deno.test("QDPX Basic Functionality", async (t) => {
   await t.step("should pack and unpack QDE successfully", async () => {

@@ -1,16 +1,9 @@
-import { BlobReader, BlobWriter, type Entry, TextReader, ZipWriter } from "@zip-js/zip-js";
+import { BlobReader, BlobWriter, TextReader, ZipWriter } from "@zip-js/zip-js";
 
 import { jsonToQde } from "../qde/jsonToXml.ts";
 import { validateQdeJson } from "../qde/validate.ts";
 import { qdeToJson } from "../qde/xmlToJson.ts";
 import type { Project } from "../schema.ts";
-
-export type QdpxPacker = {
-  entries: Entry[];
-  readProjectQde: () => Promise<string>;
-  extractAll: () => AsyncGenerator<ArrayBuffer>;
-  close: () => Promise<void>;
-};
 
 export type PackQdpxOptions = {
   password?: string;

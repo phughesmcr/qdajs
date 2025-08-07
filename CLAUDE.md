@@ -17,8 +17,10 @@ QDAJS is a Deno library for working with QDE (Qualitative Data Exchange) and QDP
 
 ### Testing and Benchmarking
 
-- `deno test --allow-read --allow-write ./test/**/*.test.ts` - Run all tests with required permissions
-- `deno bench -A` - Run benchmarks with all permissions
+- `deno task test` - Run all tests with required permissions
+- `deno test --allow-read --allow-write ./test/**/*.test.ts` - Run all tests directly
+- `deno task bench` - Run benchmarks with all permissions
+- `deno bench -A` - Run benchmarks directly
 
 ### Publishing
 
