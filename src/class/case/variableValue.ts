@@ -20,39 +20,41 @@ export class VariableValue<T extends VariableValueType> {
     const result = variableValueSchema.safeParse(json);
     if (!result.success) throw new Error(result.error.message);
 
+    const variableRef = Ref.fromJson(result.data["VariableRef"]);
+
     if (result.data["TextValue"] !== undefined) {
       return new VariableValue<T>({
-        variableRef: Ref.fromJson(result.data["VariableRef"]),
+        variableRef,
         value: result.data["TextValue"] as T,
         type: "Text",
       });
     } else if (result.data["BooleanValue"] !== undefined) {
       return new VariableValue<T>({
-        variableRef: Ref.fromJson(result.data["VariableRef"]),
+        variableRef,
         value: result.data["BooleanValue"] as T,
         type: "Boolean",
       });
     } else if (result.data["IntegerValue"] !== undefined) {
       return new VariableValue<T>({
-        variableRef: Ref.fromJson(result.data["VariableRef"]),
+        variableRef,
         value: result.data["IntegerValue"] as T,
         type: "Integer",
       });
     } else if (result.data["FloatValue"] !== undefined) {
       return new VariableValue<T>({
-        variableRef: Ref.fromJson(result.data["VariableRef"]),
+        variableRef,
         value: result.data["FloatValue"] as T,
         type: "Float",
       });
     } else if (result.data["DateValue"] !== undefined) {
       return new VariableValue<T>({
-        variableRef: Ref.fromJson(result.data["VariableRef"]),
+        variableRef,
         value: result.data["DateValue"] as T,
         type: "Date",
       });
     } else if (result.data["DateTimeValue"] !== undefined) {
       return new VariableValue<T>({
-        variableRef: Ref.fromJson(result.data["VariableRef"]),
+        variableRef,
         value: result.data["DateTimeValue"] as T,
         type: "DateTime",
       });

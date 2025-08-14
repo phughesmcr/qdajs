@@ -24,7 +24,7 @@ export class VideoSelection extends SelectionBase {
       creationDateTime: data.creationDateTime ? new Date(data.creationDateTime) : undefined,
       modifyingUser: data.modifyingUser,
       modifiedDateTime: data.modifiedDateTime ? new Date(data.modifiedDateTime) : undefined,
-      noteRefs: (data.NoteRef ?? []).map((r) => Ref.fromJson(r)),
+      noteRefs: new Set(data.NoteRef?.map((r) => Ref.fromJson(r)) ?? []),
       begin: data.begin,
       end: data.end,
     });
@@ -45,7 +45,7 @@ export class VideoSelection extends SelectionBase {
       creationDateTime: this.creationDateTime?.toISOString(),
       modifyingUser: this.modifyingUser,
       modifiedDateTime: this.modifiedDateTime?.toISOString(),
-      NoteRef: this.noteRefs.map((r) => r.toJson()),
+      ...(this.noteRefs.size > 0 ? { NoteRef: [...this.noteRefs].map((r) => r.toJson()) } : {}),
       begin: this.begin,
       end: this.end,
     };

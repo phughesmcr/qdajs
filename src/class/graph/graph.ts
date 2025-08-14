@@ -1,20 +1,20 @@
 import { graphSchema } from "../../qde/schema.ts";
-import type { GraphJson } from "../../qde/types.ts";
+import type { GraphJson, GuidString } from "../../qde/types.ts";
 import { Edge } from "./edge.ts";
 import { Vertex } from "./vertex.ts";
 
 export type GraphSpec = {
-  guid: string;
+  guid: GuidString;
   name?: string;
-  vertices: Vertex[];
-  edges: Edge[];
+  vertices: Set<Vertex>;
+  edges: Set<Edge>;
 };
 
 export class Graph {
-  readonly guid: string;
+  readonly guid: GuidString;
   readonly name?: string;
-  readonly vertices: Vertex[];
-  readonly edges: Edge[];
+  readonly vertices: Set<Vertex>;
+  readonly edges: Set<Edge>;
 
   static fromJson(json: GraphJson): Graph {
     const result = graphSchema.safeParse(json);
@@ -23,8 +23,8 @@ export class Graph {
     return new Graph({
       guid: data.guid,
       name: data.name,
-      vertices: (data.Vertex ?? []).map(Vertex.fromJson),
-      edges: (data.Edge ?? []).map(Edge.fromJson),
+      vertices: new Set(data.Vertex?.map(Vertex.fromJson) ?? []),
+      edges: new Set(data.Edge?.map(Edge.fromJson) ?? []),
     });
   }
 
@@ -39,8 +39,8 @@ export class Graph {
     return {
       guid: this.guid,
       name: this.name,
-      Vertex: this.vertices.map((v) => v.toJson()),
-      Edge: this.edges.map((e) => e.toJson()),
+      ...(this.vertices.size > 0 ? { Vertex: [...this.vertices].map((v) => v.toJson()) } : {}),
+      ...(this.edges.size > 0 ? { Edge: [...this.edges].map((e) => e.toJson()) } : {}),
     };
   }
 }

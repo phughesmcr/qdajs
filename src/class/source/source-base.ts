@@ -5,9 +5,9 @@ import type { Auditable, Described, HasNoteRefs, Identifiable, Named } from "../
 export type SourceBaseSpec =
   & Identifiable
   & Partial<Named & Described & Auditable>
+  & HasNoteRefs
   & {
-    noteRefs: Ref[];
-    variableValues: VariableValueJson[];
+    variableValues: Set<VariableValueJson>;
   };
 
 export abstract class SourceBase
@@ -19,8 +19,8 @@ export abstract class SourceBase
   readonly creationDateTime?: Date;
   readonly modifyingUser?: string;
   readonly modifiedDateTime?: Date;
-  readonly noteRefs: Ref[];
-  readonly variableValues: VariableValueJson[];
+  readonly noteRefs: Set<Ref>;
+  readonly variableValues: Set<VariableValueJson>;
 
   protected constructor(spec: SourceBaseSpec) {
     this.guid = spec.guid;

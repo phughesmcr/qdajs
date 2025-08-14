@@ -1,32 +1,29 @@
 import { codeSchema } from "../../qde/schema.ts";
-import type { CodeJson, RGBString } from "../../qde/types.ts";
+import type { CodeJson, GuidString, RGBString } from "../../qde/types.ts";
 import { Ref } from "../ref/ref.ts";
 
 export interface CodeSpec {
-  readonly guid: string;
+  readonly guid: GuidString;
   readonly name: string;
   readonly isCodable: boolean;
-  readonly color: RGBString | undefined;
-  readonly description: string | undefined;
-  readonly noteRefs: Ref[] | undefined;
-  readonly codeRefs: Code[] | undefined;
+  readonly color?: RGBString;
+  readonly description?: string;
+  readonly noteRefs?: Set<Ref>;
+  readonly codeRefs?: Set<Code>;
 }
 
 export class Code {
-  readonly guid: string;
+  readonly guid: GuidString;
   readonly name: string;
   readonly isCodable: boolean;
-  readonly color: string | undefined;
-
-  readonly description: string | undefined;
-  readonly noteRefs: Ref[] | undefined;
-  readonly codeRefs: Code[] | undefined;
+  readonly color?: RGBString;
+  readonly description?: string;
+  readonly noteRefs?: Set<Ref>;
+  readonly codeRefs?: Set<Code>;
 
   static fromJson(json: CodeJson): Code {
     const result = codeSchema.safeParse(json);
-    if (!result.success) {
-      throw new Error(result.error.message);
-    }
+    if (!result.success) throw new Error(result.error.message);
     const data = result.data as unknown as CodeJson;
     return new Code({
       guid: data._attributes.guid,
@@ -34,8 +31,8 @@ export class Code {
       isCodable: data._attributes.isCodable,
       color: data._attributes.color,
       description: data.Description,
-      noteRefs: data.NoteRef?.map((r) => Ref.fromJson(r)),
-      codeRefs: data.Code?.map((c) => Code.fromJson(c)),
+      noteRefs: new Set(data.NoteRef?.map((r) => Ref.fromJson(r))),
+      codeRefs: new Set(data.Code?.map((c) => Code.fromJson(c))),
     });
   }
 
@@ -50,6 +47,8 @@ export class Code {
   }
 
   toJson(): CodeJson {
+    const noteRefs = this.noteRefs ? [...this.noteRefs].map((r) => r.toJson()) : [];
+    const codeRefs = this.codeRefs ? [...this.codeRefs].map((c) => c.toJson()) : [];
     return {
       _attributes: {
         guid: this.guid,
@@ -58,8 +57,8 @@ export class Code {
         color: this.color,
       },
       Description: this.description,
-      NoteRef: this.noteRefs?.map((r) => r.toJson()),
-      Code: this.codeRefs?.map((c) => c.toJson()),
+      ...(noteRefs.length > 0 ? { NoteRef: noteRefs } : {}),
+      ...(codeRefs.length > 0 ? { Code: codeRefs } : {}),
     };
   }
 }

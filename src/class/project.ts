@@ -7,7 +7,7 @@ import { Graph } from "./graph/graph.ts";
 import { Link } from "./link/link.ts";
 import { Note } from "./note/note.ts";
 import { Ref } from "./ref/ref.ts";
-import { Set } from "./set/set.ts";
+import { CodeSet } from "./set/set.ts";
 import { type AnySource, AudioSource, PDFSource, PictureSource, TextSource, VideoSource } from "./source/index.ts";
 import { User } from "./user/user.ts";
 
@@ -26,7 +26,7 @@ export type ProjectSpec = {
   cases: Case[];
   sources: AnySource[];
   notes: Note[];
-  sets: Set[];
+  sets: CodeSet[];
   graphs: Graph[];
   links: Link[];
   description?: string;
@@ -48,7 +48,7 @@ export class Project {
   readonly cases: Case[];
   readonly sources: AnySource[];
   readonly notes: Note[];
-  readonly sets: Set[];
+  readonly sets: CodeSet[];
   readonly graphs: Graph[];
   readonly links: Link[];
   readonly description?: string;
@@ -61,8 +61,8 @@ export class Project {
     }
     const data = result.data as unknown as ProjectJson;
     const codeBook = data.CodeBook ? Codebook.fromJson(data.CodeBook) : new Codebook({
-      codes: [],
-      sets: [],
+      codes: new Set(),
+      sets: new Set(),
       origin: data._attributes.origin ?? "",
     });
     const sources = data.Sources
@@ -88,7 +88,7 @@ export class Project {
       cases: data.Cases?.Case?.map((c) => Case.fromJson(c)) ?? [],
       sources: Object.values(sources).flat(),
       notes: data.Notes?.Note?.map((n) => Note.fromJson(n)) ?? [],
-      sets: data.Sets?.Set?.map((s) => Set.fromJson(s)) ?? [],
+      sets: data.Sets?.Set?.map((s) => CodeSet.fromJson(s)) ?? [],
       graphs: data.Graphs?.Graph?.map((g) => Graph.fromJson(g)) ?? [],
       links: data.Links?.Link?.map((l) => Link.fromJson(l)) ?? [],
       description: data.Description ?? undefined,
@@ -169,8 +169,8 @@ export class Project {
         : {}),
       // Include CodeBook only when it contains meaningful data
       ...((this.codeBook && (
-          (this.codeBook.codes?.length ?? 0) > 0 ||
-          (this.codeBook.sets?.length ?? 0) > 0 ||
+          (this.codeBook.codes?.size ?? 0) > 0 ||
+          (this.codeBook.sets?.size ?? 0) > 0 ||
           (this.codeBook.origin ?? "") !== ""
         ))
         ? { CodeBook: this.codeBook.toJson() }

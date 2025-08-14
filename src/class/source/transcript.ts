@@ -1,15 +1,16 @@
 import { transcriptSchema } from "../../qde/schema.ts";
 import type { SyncPointJson, TranscriptJson, TranscriptSelectionJson } from "../../qde/types.ts";
+import type { HasNoteRefs } from "../index.ts";
 import { Ref } from "../ref/ref.ts";
 import type { Auditable, Described, Identifiable, Named } from "../shared/interfaces.ts";
 
 export type TranscriptSpec =
   & Identifiable
   & Partial<Named & Described & Auditable>
+  & HasNoteRefs
   & {
-    syncPoints: SyncPointJson[];
-    selections: TranscriptSelectionJson[];
-    noteRefs: Ref[];
+    syncPoints: Set<SyncPointJson>;
+    selections: Set<TranscriptSelectionJson>;
     plainTextPath?: string;
     richTextPath?: string;
     plainTextContent?: string;
@@ -23,9 +24,9 @@ export class Transcript implements Identifiable, Partial<Named>, Partial<Describ
   readonly creationDateTime?: Date;
   readonly modifyingUser?: string;
   readonly modifiedDateTime?: Date;
-  readonly noteRefs: Ref[];
-  readonly syncPoints: SyncPointJson[];
-  readonly selections: TranscriptSelectionJson[];
+  readonly noteRefs: Set<Ref>;
+  readonly syncPoints: Set<SyncPointJson>;
+  readonly selections: Set<TranscriptSelectionJson>;
   readonly plainTextPath?: string;
   readonly richTextPath?: string;
   readonly plainTextContent?: string;
@@ -42,9 +43,9 @@ export class Transcript implements Identifiable, Partial<Named>, Partial<Describ
       creationDateTime: data.creationDateTime ? new Date(data.creationDateTime) : undefined,
       modifyingUser: data.modifyingUser,
       modifiedDateTime: data.modifiedDateTime ? new Date(data.modifiedDateTime) : undefined,
-      noteRefs: (data.NoteRef ?? []).map((r) => Ref.fromJson(r)),
-      syncPoints: data.SyncPoint ?? [],
-      selections: data.TranscriptSelection ?? [],
+      noteRefs: new Set(data.NoteRef?.map((r) => Ref.fromJson(r)) ?? []),
+      syncPoints: new Set(data.SyncPoint ?? []),
+      selections: new Set(data.TranscriptSelection ?? []),
       plainTextPath: data.plainTextPath,
       richTextPath: data.richTextPath,
       plainTextContent: data.PlainTextContent,
@@ -76,9 +77,9 @@ export class Transcript implements Identifiable, Partial<Named>, Partial<Describ
       creationDateTime: this.creationDateTime?.toISOString(),
       modifyingUser: this.modifyingUser,
       modifiedDateTime: this.modifiedDateTime?.toISOString(),
-      NoteRef: this.noteRefs.map((r) => r.toJson()),
-      SyncPoint: this.syncPoints,
-      TranscriptSelection: this.selections,
+      ...(this.noteRefs.size > 0 ? { NoteRef: [...this.noteRefs].map((r) => r.toJson()) } : {}),
+      ...(this.syncPoints.size > 0 ? { SyncPoint: [...this.syncPoints] } : {}),
+      ...(this.selections.size > 0 ? { TranscriptSelection: [...this.selections] } : {}),
       plainTextPath: this.plainTextPath,
       richTextPath: this.richTextPath,
       PlainTextContent: this.plainTextContent,

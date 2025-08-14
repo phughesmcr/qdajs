@@ -1,5 +1,5 @@
 import { caseSchema } from "../../qde/schema.ts";
-import type { CaseJson } from "../../qde/types.ts";
+import type { CaseJson, GuidString } from "../../qde/types.ts";
 import { Ref } from "../ref/ref.ts";
 import { VariableValue as VariableValueClass, type VariableValueType } from "./variableValue.ts";
 
@@ -14,13 +14,13 @@ export type CaseSpec = {
 };
 
 export class Case {
-  readonly guid: string;
-  readonly name: string;
-  readonly description: string;
-  readonly codeRefs: Ref[];
-  readonly variableValues: VariableValueClass<VariableValueType>[];
-  readonly sourceRefs: Ref[];
-  readonly selectionRefs: Ref[];
+  readonly guid: GuidString;
+  readonly name?: string;
+  readonly description?: string;
+  readonly codeRefs: Set<Ref>;
+  readonly variableValues: Set<VariableValueClass<VariableValueType>>;
+  readonly sourceRefs: Set<Ref>;
+  readonly selectionRefs: Set<Ref>;
 
   static fromJson(json: CaseJson): Case {
     const result = caseSchema.safeParse(json);
@@ -54,12 +54,12 @@ export class Case {
 
   constructor(spec: CaseSpec) {
     this.guid = spec.guid;
-    this.name = spec.name ?? "";
-    this.description = spec.description ?? "";
-    this.codeRefs = spec.codeRefs;
-    this.variableValues = spec.variableValues;
-    this.sourceRefs = spec.sourceRefs;
-    this.selectionRefs = spec.selectionRefs;
+    this.name = spec.name;
+    this.description = spec.description;
+    this.codeRefs = new Set(spec.codeRefs);
+    this.variableValues = new Set(spec.variableValues);
+    this.sourceRefs = new Set(spec.sourceRefs);
+    this.selectionRefs = new Set(spec.selectionRefs);
   }
 
   toJson(): CaseJson {
@@ -67,10 +67,10 @@ export class Case {
       guid: this.guid,
       name: this.name,
       Description: this.description,
-      ...(this.codeRefs.length > 0 ? { CodeRef: this.codeRefs.map((ref) => ref.toJson()) } : {}),
-      ...(this.variableValues.length > 0 ? { VariableValue: this.variableValues.map((v) => v.toJson()) } : {}),
-      ...(this.sourceRefs.length > 0 ? { SourceRef: this.sourceRefs.map((ref) => ref.toJson()) } : {}),
-      ...(this.selectionRefs.length > 0 ? { SelectionRef: this.selectionRefs.map((ref) => ref.toJson()) } : {}),
+      ...(this.codeRefs.size > 0 ? { CodeRef: [...this.codeRefs].map((ref) => ref.toJson()) } : {}),
+      ...(this.variableValues.size > 0 ? { VariableValue: [...this.variableValues].map((v) => v.toJson()) } : {}),
+      ...(this.sourceRefs.size > 0 ? { SourceRef: [...this.sourceRefs].map((ref) => ref.toJson()) } : {}),
+      ...(this.selectionRefs.size > 0 ? { SelectionRef: [...this.selectionRefs].map((ref) => ref.toJson()) } : {}),
     };
   }
 }

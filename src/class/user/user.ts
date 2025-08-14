@@ -1,8 +1,8 @@
 import { userSchema } from "../../qde/schema.ts";
-import type { UserJson } from "../../qde/types.ts";
+import type { GuidString, UserJson } from "../../qde/types.ts";
 
 export class User {
-  readonly guid: string;
+  readonly guid: GuidString;
   readonly name: string;
   readonly id: string;
 

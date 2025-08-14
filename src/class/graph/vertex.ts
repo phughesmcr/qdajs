@@ -1,29 +1,29 @@
 import { vertexSchema } from "../../qde/schema.ts";
-import type { VertexJson } from "../../qde/types.ts";
+import type { GuidString, RGBString, VertexJson } from "../../qde/types.ts";
 import type { Shape } from "../../types.ts";
 
 export type VertexSpec = {
-  guid: string;
-  representedGUID?: string;
+  guid: GuidString;
+  representedGUID?: GuidString;
   name?: string;
   firstX: number;
   firstY: number;
   secondX?: number;
   secondY?: number;
   shape?: Shape;
-  color?: string;
+  color?: RGBString;
 };
 
 export class Vertex {
-  readonly guid: string;
-  readonly representedGUID?: string;
+  readonly guid: GuidString;
+  readonly representedGUID?: GuidString;
   readonly name?: string;
   readonly firstX: number;
   readonly firstY: number;
   readonly secondX?: number;
   readonly secondY?: number;
   readonly shape?: Shape;
-  readonly color?: string;
+  readonly color?: RGBString;
 
   static fromJson(json: VertexJson): Vertex {
     const result = vertexSchema.safeParse(json);

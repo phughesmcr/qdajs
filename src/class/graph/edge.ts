@@ -1,27 +1,27 @@
 import { edgeSchema } from "../../qde/schema.ts";
-import type { EdgeJson } from "../../qde/types.ts";
-import type { LinkDirection } from "../../types.ts";
+import type { EdgeJson, GuidString, RGBString } from "../../qde/types.ts";
+import type { LineStyle, LinkDirection } from "../../types.ts";
 
 export type EdgeSpec = {
-  guid: string;
-  representedGUID?: string;
+  guid: GuidString;
+  representedGUID?: GuidString;
   name?: string;
-  sourceVertex: string;
-  targetVertex: string;
-  color?: string;
+  sourceVertex: GuidString;
+  targetVertex: GuidString;
+  color?: RGBString;
   direction?: LinkDirection;
-  lineStyle?: "dotted" | "dashed" | "solid";
+  lineStyle?: LineStyle;
 };
 
 export class Edge {
-  readonly guid: string;
-  readonly representedGUID?: string;
+  readonly guid: GuidString;
+  readonly representedGUID?: GuidString;
   readonly name?: string;
-  readonly sourceVertex: string;
-  readonly targetVertex: string;
-  readonly color?: string;
+  readonly sourceVertex: GuidString;
+  readonly targetVertex: GuidString;
+  readonly color?: RGBString;
   readonly direction?: LinkDirection;
-  readonly lineStyle?: "dotted" | "dashed" | "solid";
+  readonly lineStyle?: LineStyle;
 
   static fromJson(json: EdgeJson): Edge {
     const result = edgeSchema.safeParse(json);

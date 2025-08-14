@@ -1,8 +1,8 @@
 import { refSchema } from "../../qde/schema.ts";
-import type { RefJson } from "../../qde/types.ts";
+import type { GuidString, RefJson } from "../../qde/types.ts";
 
 export class Ref {
-  readonly targetGUID: string;
+  readonly targetGUID: GuidString;
 
   static fromJson(json: unknown): Ref {
     const result = refSchema.safeParse(json);

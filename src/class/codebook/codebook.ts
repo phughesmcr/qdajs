@@ -1,18 +1,18 @@
 import { codeBookSchema } from "../../qde/schema.ts";
 import type { CodebookJson } from "../../qde/types.ts";
-import { Set } from "../set/set.ts";
+import { CodeSet } from "../set/set.ts";
 import { Code } from "./code.ts";
 
 export interface CodebookSpec {
-  readonly codes: Code[];
-  readonly sets: Set[];
+  readonly codes: Set<Code>;
+  readonly sets: Set<CodeSet>;
   readonly origin: string | undefined;
 }
 
 export class Codebook {
-  readonly codes: Code[];
-  readonly sets: Set[];
-  readonly origin: string | undefined;
+  readonly codes: Set<Code>;
+  readonly sets: Set<CodeSet>;
+  readonly origin?: string;
 
   static fromJson(json: CodebookJson): Codebook {
     const result = codeBookSchema.safeParse(json);
@@ -20,9 +20,12 @@ export class Codebook {
       throw new Error(result.error.message);
     }
     const data = result.data as unknown as CodebookJson;
+    const codes = new Set(data.Codes.Code.map((c) => Code.fromJson(c)));
+    const sets = new Set(data.Sets?.Set.map((s) => CodeSet.fromJson(s)) ?? []);
+
     return new Codebook({
-      codes: data.Codes.Code.map((c) => Code.fromJson(c)),
-      sets: data.Sets?.Set.map((s) => Set.fromJson(s)) ?? [],
+      codes,
+      sets,
       origin: data.origin,
     });
   }
@@ -36,12 +39,12 @@ export class Codebook {
   toJson(): CodebookJson {
     return {
       Codes: {
-        Code: this.codes.map((c) => c.toJson()),
+        Code: [...this.codes].map((c) => c.toJson()),
       },
-      ...(this.sets.length > 0
+      ...(this.sets.size > 0
         ? {
           Sets: {
-            Set: this.sets.map((s) => s.toJson()),
+            Set: [...this.sets].map((s) => s.toJson()),
           },
         }
         : {}),

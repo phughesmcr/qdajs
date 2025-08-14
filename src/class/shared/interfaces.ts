@@ -13,7 +13,7 @@ export interface Described {
 }
 
 export interface HasNoteRefs {
-  noteRefs: Ref[];
+  noteRefs: Set<Ref>;
 }
 
 export interface Auditable {

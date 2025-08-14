@@ -1,26 +1,26 @@
 import { linkSchema } from "../../qde/schema.ts";
-import type { LinkJson } from "../../qde/types.ts";
+import type { GuidString, LinkJson, RGBString } from "../../qde/types.ts";
 import type { LinkDirection } from "../../types.ts";
 import { Ref } from "../ref/ref.ts";
 
 export type LinkSpec = {
-  guid: string;
-  name: string;
-  direction: LinkDirection;
-  color?: string;
-  originGUID?: string;
-  targetGUID?: string;
-  noteRefs: Ref[];
+  guid: GuidString;
+  name?: string;
+  direction?: LinkDirection;
+  color?: RGBString;
+  originGUID?: GuidString;
+  targetGUID?: GuidString;
+  noteRefs: Set<Ref>;
 };
 
 export class Link {
-  readonly guid: string;
-  readonly name: string;
-  readonly direction: LinkDirection;
-  readonly color?: string;
-  readonly originGUID?: string;
-  readonly targetGUID?: string;
-  readonly noteRefs: Ref[];
+  readonly guid: GuidString;
+  readonly name?: string;
+  readonly direction?: LinkDirection;
+  readonly color?: RGBString;
+  readonly originGUID?: GuidString;
+  readonly targetGUID?: GuidString;
+  readonly noteRefs: Set<Ref>;
 
   static fromJson(json: LinkJson): Link {
     const result = linkSchema.safeParse(json);
@@ -28,15 +28,15 @@ export class Link {
 
     const {
       guid,
-      name = "",
-      direction = "Associative" as LinkDirection,
+      name,
+      direction,
       color,
       originGUID,
       targetGUID,
       NoteRef,
     } = result.data as unknown as LinkJson;
 
-    const noteRefs = NoteRef?.map((ref) => Ref.fromJson(ref)) ?? [];
+    const noteRefs = new Set(NoteRef?.map((ref) => Ref.fromJson(ref)) ?? []);
 
     return new Link({
       guid,
@@ -51,8 +51,8 @@ export class Link {
 
   constructor(spec: LinkSpec) {
     this.guid = spec.guid;
-    this.name = spec.name ?? "";
-    this.direction = spec.direction ?? "Associative";
+    this.name = spec.name;
+    this.direction = spec.direction;
     this.color = spec.color;
     this.originGUID = spec.originGUID;
     this.targetGUID = spec.targetGUID;
@@ -67,7 +67,7 @@ export class Link {
       color: this.color,
       originGUID: this.originGUID,
       targetGUID: this.targetGUID,
-      NoteRef: this.noteRefs.map((ref) => ref.toJson()),
+      ...(this.noteRefs.size > 0 ? { NoteRef: [...this.noteRefs].map((ref) => ref.toJson()) } : {}),
     };
   }
 }

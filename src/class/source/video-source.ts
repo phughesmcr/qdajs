@@ -24,8 +24,8 @@ export class VideoSource extends SourceBase {
       creationDateTime: data.creationDateTime ? new Date(data.creationDateTime) : undefined,
       modifyingUser: data.modifyingUser,
       modifiedDateTime: data.modifiedDateTime ? new Date(data.modifiedDateTime) : undefined,
-      noteRefs: (data.NoteRef ?? []).map((r) => Ref.fromJson(r)),
-      variableValues: data.VariableValue ?? [],
+      noteRefs: new Set(data.NoteRef?.map((r) => Ref.fromJson(r)) ?? []),
+      variableValues: new Set(data.VariableValue ?? []),
       path: data.path,
       currentPath: data.currentPath,
     });
@@ -46,8 +46,8 @@ export class VideoSource extends SourceBase {
       creationDateTime: this.creationDateTime?.toISOString(),
       modifyingUser: this.modifyingUser,
       modifiedDateTime: this.modifiedDateTime?.toISOString(),
-      NoteRef: this.noteRefs.map((r) => r.toJson()),
-      VariableValue: this.variableValues,
+      ...(this.noteRefs.size > 0 ? { NoteRef: [...this.noteRefs].map((r) => r.toJson()) } : {}),
+      ...(this.variableValues.size > 0 ? { VariableValue: [...this.variableValues] } : {}),
       path: this.path,
       currentPath: this.currentPath,
     };
