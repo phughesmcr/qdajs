@@ -81,6 +81,8 @@ class JsonToXmlConverter {
     for (const key in obj) {
       if (!Object.hasOwn(obj, key)) continue;
       const value = obj[key];
+      // Skip null/undefined fields to avoid emitting empty elements
+      if (value === undefined || value === null) continue;
 
       if (key === "_attributes") {
         if (typeof value === "object" && value !== null) {
@@ -126,6 +128,7 @@ class JsonToXmlConverter {
    * @param elementName - Name of the XML element
    */
   static #addValueToElement(doc: Document, parent: Element, value: unknown, elementName: string): void {
+    if (value === undefined || value === null) return;
     if (Array.isArray(value)) {
       // Handle arrays - each item becomes a separate element with the same name
       for (const item of value) {

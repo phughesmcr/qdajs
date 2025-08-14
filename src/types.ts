@@ -8,6 +8,7 @@ import type { DIRECTIONS, LINE_STYLES, SHAPES, VARIABLE_TYPES } from "./constant
 export type { Entry } from "@zip-js/zip-js";
 
 export type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue };
+
 export type JsonObject = Record<string, unknown>;
 
 export type Result<T, E extends Error = Error> = [ok: true, data: T] | [ok: false, error: E];
@@ -19,3 +20,21 @@ export type Direction = typeof DIRECTIONS[number];
 export type VariableType = typeof VARIABLE_TYPES[number];
 
 export type LineStyle = typeof LINE_STYLES[number];
+
+export type LinkDirection = "Associative" | "OneWay" | "Bidirectional";
+
+// Source/Selection nominal union types (export for consumers)
+export type SourceType =
+  | "TextSource"
+  | "PictureSource"
+  | "PDFSource"
+  | "AudioSource"
+  | "VideoSource";
+
+export type SelectionType =
+  | "PlainTextSelection"
+  | "PictureSelection"
+  | "PDFSelection"
+  | "AudioSelection"
+  | "VideoSelection"
+  | "TranscriptSelection";

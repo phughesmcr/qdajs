@@ -5,7 +5,7 @@ A library for working with QDE and QDXP files.
 ## Usage
 
 ```ts
-import { qde, qdpx } from "@phughesmcr/qdajs";
+import { qde, qdpx, refi } from "@phughesmcr/qdajs";
 
 // Unpack a QDXP file
 const input: Blob = Deno.readFileSync("example.qdpx");
@@ -27,6 +27,12 @@ for await (const sourceData of unpacked.extractAll()) {
 const [jsonOk, json] = qde.toJson(projectQde);
 if (!jsonOk) throw json;
 console.log(json);
+
+// Convert the project QDE to a Javascript class
+const [projectSuccess, project] = refi.project.fromJson(json);
+if (projectSuccess) {
+  console.log("Project:", project);
+}
 
 // TODO: functionality to perform CRUD operations on the project
 

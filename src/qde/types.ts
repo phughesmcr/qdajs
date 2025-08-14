@@ -13,6 +13,8 @@ import type { Direction, LineStyle, Result, Shape, VariableType } from "../types
 
 export type GuidString = string;
 
+export type RGBString = string;
+
 export interface RefJson {
   targetGUID: GuidString;
 }
@@ -47,7 +49,7 @@ export interface CodeJson {
     guid: GuidString;
     name: string;
     isCodable: boolean;
-    color?: string;
+    color?: RGBString;
   };
   Description?: string;
   NoteRef?: RefJson[];
@@ -58,6 +60,10 @@ export interface CodebookJson {
   Codes: {
     Code: CodeJson[];
   };
+  Sets?: {
+    Set: SetJson[];
+  };
+  origin?: string;
 }
 
 export interface UserJson {
@@ -266,7 +272,7 @@ export interface VertexJson {
   secondX?: number;
   secondY?: number;
   shape?: Shape;
-  color?: string;
+  color?: RGBString;
 }
 
 export interface EdgeJson {
@@ -275,7 +281,7 @@ export interface EdgeJson {
   name?: string;
   sourceVertex: GuidString;
   targetVertex: GuidString;
-  color?: string;
+  color?: RGBString;
   direction?: Direction;
   lineStyle?: LineStyle;
 }
@@ -295,7 +301,7 @@ export interface LinkJson {
   guid: GuidString;
   name?: string;
   direction?: Direction;
-  color?: string;
+  color?: RGBString;
   originGUID?: GuidString;
   targetGUID?: GuidString;
   NoteRef?: RefJson[];

@@ -19,6 +19,7 @@ import {
   SHAPES,
   VARIABLE_TYPES,
 } from "../constants.ts";
+import type { RefJson } from "./types.ts";
 
 // Enums
 export const shapeEnum: z.ZodTypeAny = z.enum(SHAPES);
@@ -60,7 +61,7 @@ export const baseEntity: z.ZodObject<Record<string, z.ZodTypeAny>> = z.object({
   ...commonMetadata.shape,
 });
 
-export const refSchema: z.ZodObject<Record<string, z.ZodTypeAny>> = z.object({
+export const refSchema: z.ZodType<RefJson> = z.object({
   targetGUID: guidField,
 });
 

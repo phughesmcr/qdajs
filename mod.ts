@@ -22,6 +22,7 @@
  * @module
  */
 
+import * as REFI from "./src/class/index.ts";
 import { jsonToQde } from "./src/qde/jsonToXml.ts";
 import { validateQdeJson } from "./src/qde/validate.ts";
 import { qdeToJson } from "./src/qde/xmlToJson.ts";
@@ -35,15 +36,21 @@ import type { Result } from "./src/types.ts";
  * @example
  * ```typescript
  * // Convert QDE XML to JSON
- * const [success, result] = qde.toJson(xmlString);
- * if (success) {
- *   console.log("Converted:", result.qde);
+ * const [jsonSuccess, jsonResult] = qde.toJson(xmlString);
+ * if (jsonSuccess) {
+ *   console.log("Converted:", jsonResult.qde);
+ * }
+ *
+ * // Convert QDE JSON to a Javascript class
+ * const [projectSuccess, project] = refi.project.fromJson(jsonData);
+ * if (projectSuccess) {
+ *   console.log("Project:", project);
  * }
  *
  * // Convert JSON to QDE XML
- * const [valid, xml] = qde.fromJson(jsonData);
- * if (valid) {
- *   console.log("XML:", xml.qde);
+ * const [xmlSuccess, xmlResult] = qde.fromJson(jsonData); // or qde.fromJson(project.toJson());
+ * if (xmlSuccess) {
+ *   console.log("XML:", xmlResult.qde);
  * }
  *
  * // Validate JSON data
@@ -110,8 +117,22 @@ export const qdpx = {
 };
 
 /**
+ * Classes for working with QDE data.
+ * @example
+ * ```typescript
+ * // Convert JSON to a Javascript class
+ * const [projectSuccess, project] = refi.project.fromJson(jsonData);
+ * if (projectSuccess) {
+ *   console.log("Project:", project);
+ * }
+ * ```
+ */
+export const refi = REFI;
+
+/**
  * Default export providing both QDE and QDPX functionality
  */
-export default { qde, qdpx };
+export default { qde, qdpx, refi };
 
+export type * from "./src/class/index.ts";
 export type { PackQdpxOptions, QdpxUnpacker, Result, SourceFile, UnpackQdpxOptions, ValidationResult };
