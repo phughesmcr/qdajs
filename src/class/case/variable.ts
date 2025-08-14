@@ -10,10 +10,11 @@ export type VariableSpec = {
 };
 
 export class Variable {
+  name: string;
+  description?: string;
+
   readonly guid: GuidString;
-  readonly name: string;
   readonly type: VariableType;
-  readonly description?: string;
 
   static fromJson(json: VariableJson): Variable {
     const result = variableSchema.safeParse(json);

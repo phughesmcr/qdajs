@@ -15,15 +15,16 @@ export type VertexSpec = {
 };
 
 export class Vertex {
+  name?: string;
+  shape?: Shape;
+  color?: RGBString;
+
   readonly guid: GuidString;
   readonly representedGUID?: GuidString;
-  readonly name?: string;
   readonly firstX: number;
   readonly firstY: number;
   readonly secondX?: number;
   readonly secondY?: number;
-  readonly shape?: Shape;
-  readonly color?: RGBString;
 
   static fromJson(json: VertexJson): Vertex {
     const result = vertexSchema.safeParse(json);

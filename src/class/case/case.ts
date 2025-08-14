@@ -7,16 +7,17 @@ export type CaseSpec = {
   guid: string;
   name?: string;
   description?: string;
-  codeRefs: Ref[];
-  variableValues: VariableValueClass<VariableValueType>[];
-  sourceRefs: Ref[];
-  selectionRefs: Ref[];
+  codeRefs?: Set<Ref>;
+  variableValues?: Set<VariableValueClass<VariableValueType>>;
+  sourceRefs?: Set<Ref>;
+  selectionRefs?: Set<Ref>;
 };
 
 export class Case {
+  name?: string;
+  description?: string;
+
   readonly guid: GuidString;
-  readonly name?: string;
-  readonly description?: string;
   readonly codeRefs: Set<Ref>;
   readonly variableValues: Set<VariableValueClass<VariableValueType>>;
   readonly sourceRefs: Set<Ref>;
@@ -36,10 +37,10 @@ export class Case {
       SelectionRef,
     } = result.data as unknown as CaseJson;
 
-    const variableValues = VariableValue?.map((value) => VariableValueClass.fromJson(value)) ?? [];
-    const sourceRefs = SourceRef?.map((ref) => Ref.fromJson(ref)) ?? [];
-    const selectionRefs = SelectionRef?.map((ref) => Ref.fromJson(ref)) ?? [];
-    const codeRefs = CodeRef?.map((ref) => Ref.fromJson(ref)) ?? [];
+    const variableValues = new Set(VariableValue?.map((value) => VariableValueClass.fromJson(value)) ?? []);
+    const sourceRefs = new Set(SourceRef?.map((ref) => Ref.fromJson(ref)) ?? []);
+    const selectionRefs = new Set(SelectionRef?.map((ref) => Ref.fromJson(ref)) ?? []);
+    const codeRefs = new Set(CodeRef?.map((ref) => Ref.fromJson(ref)) ?? []);
 
     return new Case({
       guid,

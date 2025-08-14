@@ -6,15 +6,16 @@ export type SetSpec = {
   guid: GuidString;
   name: string;
   description?: string;
-  memberCodes: Set<Ref>;
-  memberSources: Set<Ref>;
-  memberNotes: Set<Ref>;
+  memberCodes?: Set<Ref>;
+  memberSources?: Set<Ref>;
+  memberNotes?: Set<Ref>;
 };
 
 export class CodeSet {
+  name: string;
+  description?: string;
+
   readonly guid: GuidString;
-  readonly name: string;
-  readonly description?: string;
   readonly memberCodes: Set<Ref>;
   readonly memberSources: Set<Ref>;
   readonly memberNotes: Set<Ref>;
@@ -37,9 +38,9 @@ export class CodeSet {
     this.guid = spec.guid;
     this.name = spec.name;
     this.description = spec.description;
-    this.memberCodes = spec.memberCodes;
-    this.memberSources = spec.memberSources;
-    this.memberNotes = spec.memberNotes;
+    this.memberCodes = spec.memberCodes ?? new Set();
+    this.memberSources = spec.memberSources ?? new Set();
+    this.memberNotes = spec.memberNotes ?? new Set();
   }
 
   toJson(): SetJson {

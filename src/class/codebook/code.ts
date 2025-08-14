@@ -3,23 +3,24 @@ import type { CodeJson, GuidString, RGBString } from "../../qde/types.ts";
 import { Ref } from "../ref/ref.ts";
 
 export interface CodeSpec {
-  readonly guid: GuidString;
-  readonly name: string;
-  readonly isCodable: boolean;
-  readonly color?: RGBString;
-  readonly description?: string;
-  readonly noteRefs?: Set<Ref>;
-  readonly codeRefs?: Set<Code>;
+  guid: GuidString;
+  name: string;
+  isCodable: boolean;
+  color?: RGBString;
+  description?: string;
+  noteRefs?: Set<Ref>;
+  children?: Set<Code>;
 }
 
 export class Code {
+  name: string;
+  isCodable: boolean;
+  color?: RGBString;
+  description?: string;
+
   readonly guid: GuidString;
-  readonly name: string;
-  readonly isCodable: boolean;
-  readonly color?: RGBString;
-  readonly description?: string;
   readonly noteRefs?: Set<Ref>;
-  readonly codeRefs?: Set<Code>;
+  readonly children?: Set<Code>;
 
   static fromJson(json: CodeJson): Code {
     const result = codeSchema.safeParse(json);
@@ -32,7 +33,7 @@ export class Code {
       color: data._attributes.color,
       description: data.Description,
       noteRefs: new Set(data.NoteRef?.map((r) => Ref.fromJson(r))),
-      codeRefs: new Set(data.Code?.map((c) => Code.fromJson(c))),
+      children: new Set(data.Code?.map((c) => Code.fromJson(c))),
     });
   }
 
@@ -43,12 +44,12 @@ export class Code {
     this.color = spec.color;
     this.description = spec.description;
     this.noteRefs = spec.noteRefs;
-    this.codeRefs = spec.codeRefs;
+    this.children = spec.children;
   }
 
   toJson(): CodeJson {
     const noteRefs = this.noteRefs ? [...this.noteRefs].map((r) => r.toJson()) : [];
-    const codeRefs = this.codeRefs ? [...this.codeRefs].map((c) => c.toJson()) : [];
+    const children = this.children ? [...this.children].map((c) => c.toJson()) : [];
     return {
       _attributes: {
         guid: this.guid,
@@ -58,7 +59,7 @@ export class Code {
       },
       Description: this.description,
       ...(noteRefs.length > 0 ? { NoteRef: noteRefs } : {}),
-      ...(codeRefs.length > 0 ? { Code: codeRefs } : {}),
+      ...(children.length > 0 ? { Code: children } : {}),
     };
   }
 }

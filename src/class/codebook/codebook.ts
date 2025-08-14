@@ -4,15 +4,16 @@ import { CodeSet } from "../set/set.ts";
 import { Code } from "./code.ts";
 
 export interface CodebookSpec {
-  readonly codes: Set<Code>;
-  readonly sets: Set<CodeSet>;
-  readonly origin: string | undefined;
+  codes: Set<Code>;
+  sets?: Set<CodeSet>;
+  origin?: string;
 }
 
 export class Codebook {
+  origin?: string;
+
   readonly codes: Set<Code>;
   readonly sets: Set<CodeSet>;
-  readonly origin?: string;
 
   static fromJson(json: CodebookJson): Codebook {
     const result = codeBookSchema.safeParse(json);
@@ -32,7 +33,7 @@ export class Codebook {
 
   constructor(spec: CodebookSpec) {
     this.codes = spec.codes;
-    this.sets = spec.sets;
+    this.sets = spec.sets ?? new Set();
     this.origin = spec.origin;
   }
 

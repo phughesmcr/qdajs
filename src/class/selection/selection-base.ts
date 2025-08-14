@@ -9,14 +9,15 @@ export type SelectionBaseSpec =
 
 export abstract class SelectionBase
   implements Identifiable, Partial<Named>, Partial<Described>, Partial<Auditable>, HasNoteRefs {
-  readonly guid: string;
-  readonly name?: string;
-  readonly description?: string;
-  readonly creatingUser?: GuidString;
-  readonly creationDateTime?: Date;
-  readonly modifyingUser?: GuidString;
-  readonly modifiedDateTime?: Date;
+  readonly guid: GuidString;
   readonly noteRefs: Set<Ref>;
+
+  name?: string;
+  description?: string;
+  creatingUser?: GuidString;
+  creationDateTime?: Date;
+  modifyingUser?: GuidString;
+  modifiedDateTime?: Date;
 
   protected constructor(spec: SelectionBaseSpec) {
     this.guid = spec.guid;

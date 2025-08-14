@@ -10,14 +10,15 @@ export type LinkSpec = {
   color?: RGBString;
   originGUID?: GuidString;
   targetGUID?: GuidString;
-  noteRefs: Set<Ref>;
+  noteRefs?: Set<Ref>;
 };
 
 export class Link {
+  name?: string;
+  direction?: LinkDirection;
+  color?: RGBString;
+
   readonly guid: GuidString;
-  readonly name?: string;
-  readonly direction?: LinkDirection;
-  readonly color?: RGBString;
   readonly originGUID?: GuidString;
   readonly targetGUID?: GuidString;
   readonly noteRefs: Set<Ref>;
@@ -56,7 +57,7 @@ export class Link {
     this.color = spec.color;
     this.originGUID = spec.originGUID;
     this.targetGUID = spec.targetGUID;
-    this.noteRefs = spec.noteRefs;
+    this.noteRefs = spec.noteRefs ?? new Set();
   }
 
   toJson(): LinkJson {

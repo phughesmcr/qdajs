@@ -6,13 +6,14 @@ import { Vertex } from "./vertex.ts";
 export type GraphSpec = {
   guid: GuidString;
   name?: string;
-  vertices: Set<Vertex>;
-  edges: Set<Edge>;
+  vertices?: Set<Vertex>;
+  edges?: Set<Edge>;
 };
 
 export class Graph {
+  name?: string;
+
   readonly guid: GuidString;
-  readonly name?: string;
   readonly vertices: Set<Vertex>;
   readonly edges: Set<Edge>;
 
@@ -31,8 +32,8 @@ export class Graph {
   constructor(spec: GraphSpec) {
     this.guid = spec.guid;
     this.name = spec.name;
-    this.vertices = spec.vertices;
-    this.edges = spec.edges;
+    this.vertices = spec.vertices ?? new Set();
+    this.edges = spec.edges ?? new Set();
   }
 
   toJson(): GraphJson {

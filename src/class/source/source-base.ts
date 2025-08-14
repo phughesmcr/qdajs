@@ -1,4 +1,4 @@
-import type { VariableValueJson } from "../../qde/types.ts";
+import type { GuidString, VariableValueJson } from "../../qde/types.ts";
 import type { Ref } from "../ref/ref.ts";
 import type { Auditable, Described, HasNoteRefs, Identifiable, Named } from "../shared/interfaces.ts";
 
@@ -12,13 +12,14 @@ export type SourceBaseSpec =
 
 export abstract class SourceBase
   implements Identifiable, Partial<Named>, Partial<Described>, Partial<Auditable>, HasNoteRefs {
-  readonly guid: string;
-  readonly name?: string;
-  readonly description?: string;
-  readonly creatingUser?: string;
-  readonly creationDateTime?: Date;
-  readonly modifyingUser?: string;
-  readonly modifiedDateTime?: Date;
+  name?: string;
+  description?: string;
+  creatingUser?: string;
+  creationDateTime?: Date;
+  modifyingUser?: string;
+  modifiedDateTime?: Date;
+
+  readonly guid: GuidString;
   readonly noteRefs: Set<Ref>;
   readonly variableValues: Set<VariableValueJson>;
 

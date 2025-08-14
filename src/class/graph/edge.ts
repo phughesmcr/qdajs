@@ -14,14 +14,15 @@ export type EdgeSpec = {
 };
 
 export class Edge {
+  name?: string;
+  color?: RGBString;
+  direction?: LinkDirection;
+  lineStyle?: LineStyle;
+
   readonly guid: GuidString;
   readonly representedGUID?: GuidString;
-  readonly name?: string;
   readonly sourceVertex: GuidString;
   readonly targetVertex: GuidString;
-  readonly color?: RGBString;
-  readonly direction?: LinkDirection;
-  readonly lineStyle?: LineStyle;
 
   static fromJson(json: EdgeJson): Edge {
     const result = edgeSchema.safeParse(json);

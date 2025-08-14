@@ -1,5 +1,5 @@
 import { transcriptSchema } from "../../qde/schema.ts";
-import type { SyncPointJson, TranscriptJson, TranscriptSelectionJson } from "../../qde/types.ts";
+import type { GuidString, SyncPointJson, TranscriptJson, TranscriptSelectionJson } from "../../qde/types.ts";
 import type { HasNoteRefs } from "../index.ts";
 import { Ref } from "../ref/ref.ts";
 import type { Auditable, Described, Identifiable, Named } from "../shared/interfaces.ts";
@@ -17,13 +17,14 @@ export type TranscriptSpec =
   };
 
 export class Transcript implements Identifiable, Partial<Named>, Partial<Described> {
-  readonly guid: string;
-  readonly name?: string;
-  readonly description?: string;
-  readonly creatingUser?: string;
-  readonly creationDateTime?: Date;
-  readonly modifyingUser?: string;
-  readonly modifiedDateTime?: Date;
+  name?: string;
+  description?: string;
+  creatingUser?: string;
+  creationDateTime?: Date;
+  modifyingUser?: string;
+  modifiedDateTime?: Date;
+
+  readonly guid: GuidString;
   readonly noteRefs: Set<Ref>;
   readonly syncPoints: Set<SyncPointJson>;
   readonly selections: Set<TranscriptSelectionJson>;

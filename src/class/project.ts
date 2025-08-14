@@ -1,5 +1,5 @@
 import { projectSchema } from "../qde/schema.ts";
-import type { ProjectJson } from "../qde/types.ts";
+import type { GuidString, ProjectJson } from "../qde/types.ts";
 import { Case } from "./case/case.ts";
 import { Variable } from "./case/variable.ts";
 import { Codebook } from "./codebook/codebook.ts";
@@ -14,45 +14,45 @@ import { User } from "./user/user.ts";
 export type ProjectSpec = {
   name: string;
   origin: string;
-  creatingUserGUID?: string;
+  creatingUserGUID?: GuidString;
   creationDateTime?: Date;
-  modifyingUserGUID?: string;
+  modifyingUserGUID?: GuidString;
   modifiedDateTime?: Date;
   basePath?: string;
-
-  users: User[];
-  codeBook: Codebook;
-  variables: Variable[];
-  cases: Case[];
-  sources: AnySource[];
-  notes: Note[];
-  sets: CodeSet[];
-  graphs: Graph[];
-  links: Link[];
   description?: string;
-  noteRefs: Ref[];
+
+  users?: Set<User>;
+  codeBook?: Codebook;
+  variables?: Set<Variable>;
+  cases?: Set<Case>;
+  sources?: Set<AnySource>;
+  notes?: Set<Note>;
+  sets?: Set<CodeSet>;
+  graphs?: Set<Graph>;
+  links?: Set<Link>;
+  noteRefs?: Set<Ref>;
 };
 
 export class Project {
-  readonly name: string;
-  readonly origin: string;
-  readonly creatingUserGUID?: string;
-  readonly creationDateTime?: Date;
-  readonly modifyingUserGUID?: string;
-  readonly modifiedDateTime?: Date;
-  readonly basePath?: string;
+  name: string;
+  origin: string;
+  creatingUserGUID?: GuidString;
+  creationDateTime?: Date;
+  modifyingUserGUID?: GuidString;
+  modifiedDateTime?: Date;
+  basePath?: string;
+  description?: string;
 
-  readonly users: User[];
+  readonly users: Set<User>;
   readonly codeBook: Codebook;
-  readonly variables: Variable[];
-  readonly cases: Case[];
-  readonly sources: AnySource[];
-  readonly notes: Note[];
-  readonly sets: CodeSet[];
-  readonly graphs: Graph[];
-  readonly links: Link[];
-  readonly description?: string;
-  readonly noteRefs: Ref[];
+  readonly variables: Set<Variable>;
+  readonly cases: Set<Case>;
+  readonly sources: Set<AnySource>;
+  readonly notes: Set<Note>;
+  readonly sets: Set<CodeSet>;
+  readonly graphs: Set<Graph>;
+  readonly links: Set<Link>;
+  readonly noteRefs: Set<Ref>;
 
   static fromJson(json: ProjectJson): Project {
     const result = projectSchema.safeParse(json);
@@ -82,17 +82,17 @@ export class Project {
       modifyingUserGUID: data._attributes.modifyingUserGUID,
       modifiedDateTime: data._attributes.modifiedDateTime ? new Date(data._attributes.modifiedDateTime) : undefined,
       basePath: data._attributes.basePath,
-      users: data.Users?.User.map((u) => User.fromJson(u)) ?? [],
+      users: new Set(data.Users?.User.map((u) => User.fromJson(u)) ?? []),
       codeBook,
-      variables: data.Variables?.Variable?.map((v) => Variable.fromJson(v)) ?? [],
-      cases: data.Cases?.Case?.map((c) => Case.fromJson(c)) ?? [],
-      sources: Object.values(sources).flat(),
-      notes: data.Notes?.Note?.map((n) => Note.fromJson(n)) ?? [],
-      sets: data.Sets?.Set?.map((s) => CodeSet.fromJson(s)) ?? [],
-      graphs: data.Graphs?.Graph?.map((g) => Graph.fromJson(g)) ?? [],
-      links: data.Links?.Link?.map((l) => Link.fromJson(l)) ?? [],
+      variables: new Set(data.Variables?.Variable?.map((v) => Variable.fromJson(v)) ?? []),
+      cases: new Set(data.Cases?.Case?.map((c) => Case.fromJson(c)) ?? []),
+      sources: new Set(Object.values(sources).flat()),
+      notes: new Set(data.Notes?.Note?.map((n) => Note.fromJson(n)) ?? []),
+      sets: new Set(data.Sets?.Set?.map((s) => CodeSet.fromJson(s)) ?? []),
+      graphs: new Set(data.Graphs?.Graph?.map((g) => Graph.fromJson(g)) ?? []),
+      links: new Set(data.Links?.Link?.map((l) => Link.fromJson(l)) ?? []),
       description: data.Description ?? undefined,
-      noteRefs: data.NoteRef?.map((r) => Ref.fromJson(r)) ?? [],
+      noteRefs: new Set(data.NoteRef?.map((r) => Ref.fromJson(r)) ?? []),
     });
   }
 
@@ -105,21 +105,24 @@ export class Project {
     this.modifiedDateTime = spec.modifiedDateTime;
     this.basePath = spec.basePath;
 
-    this.users = spec.users;
-    this.codeBook = spec.codeBook;
-    this.variables = spec.variables;
-    this.cases = spec.cases;
-    this.sources = spec.sources;
-    this.notes = spec.notes;
-    this.sets = spec.sets;
-    this.graphs = spec.graphs;
-    this.links = spec.links;
+    this.users = spec.users ?? new Set();
+    this.codeBook = spec.codeBook ?? new Codebook({
+      codes: new Set(),
+      sets: new Set(),
+      origin: this.origin,
+    });
+    this.variables = spec.variables ?? new Set();
+    this.cases = spec.cases ?? new Set();
+    this.sources = spec.sources ?? new Set();
+    this.notes = spec.notes ?? new Set();
+    this.sets = spec.sets ?? new Set();
+    this.graphs = spec.graphs ?? new Set();
+    this.links = spec.links ?? new Set();
     this.description = spec.description;
-    this.noteRefs = spec.noteRefs;
+    this.noteRefs = spec.noteRefs ?? new Set();
   }
 
   toJson(): ProjectJson {
-    // Group sources by concrete type to match REFI-QDA JSON structure
     const textSources = [] as ReturnType<TextSource["toJson"]>[];
     const pictureSources = [] as ReturnType<PictureSource["toJson"]>[];
     const pdfSources = [] as ReturnType<PDFSource["toJson"]>[];
@@ -160,10 +163,10 @@ export class Project {
 
     return {
       _attributes: attributes,
-      ...(this.users.length > 0
+      ...(this.users.size > 0
         ? {
           Users: {
-            User: this.users.map((u) => u.toJson()),
+            User: [...this.users].map((u) => u.toJson()),
           },
         }
         : {}),
@@ -175,51 +178,51 @@ export class Project {
         ))
         ? { CodeBook: this.codeBook.toJson() }
         : {}),
-      ...(this.variables.length > 0
+      ...(this.variables.size > 0
         ? {
           Variables: {
-            Variable: this.variables.map((v) => v.toJson()),
+            Variable: [...this.variables].map((v) => v.toJson()),
           },
         }
         : {}),
-      ...(this.cases.length > 0
+      ...(this.cases.size > 0
         ? {
           Cases: {
-            Case: this.cases.map((c) => c.toJson()),
+            Case: [...this.cases].map((c) => c.toJson()),
           },
         }
         : {}),
       ...(Object.keys(sourcesJson ?? {}).length ? { Sources: sourcesJson } : {}),
-      ...(this.notes.length > 0
+      ...(this.notes.size > 0
         ? {
           Notes: {
-            Note: this.notes.map((n) => n.toJson()),
+            Note: [...this.notes].map((n) => n.toJson()),
           },
         }
         : {}),
-      ...(this.sets.length > 0
+      ...(this.sets.size > 0
         ? {
           Sets: {
-            Set: this.sets.map((s) => s.toJson()),
+            Set: [...this.sets].map((s) => s.toJson()),
           },
         }
         : {}),
-      ...(this.graphs.length > 0
+      ...(this.graphs.size > 0
         ? {
           Graphs: {
-            Graph: this.graphs.map((g) => g.toJson()),
+            Graph: [...this.graphs].map((g) => g.toJson()),
           },
         }
         : {}),
-      ...(this.links.length > 0
+      ...(this.links.size > 0
         ? {
           Links: {
-            Link: this.links.map((l) => l.toJson()),
+            Link: [...this.links].map((l) => l.toJson()),
           },
         }
         : {}),
       ...(this.description ? { Description: this.description } : {}),
-      ...(this.noteRefs.length > 0 ? { NoteRef: this.noteRefs.map((r) => r.toJson()) } : {}),
+      ...(this.noteRefs.size > 0 ? { NoteRef: [...this.noteRefs].map((r) => r.toJson()) } : {}),
     };
   }
 }
