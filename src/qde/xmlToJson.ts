@@ -18,6 +18,7 @@ import {
   INT_REGEX,
   REF_ELEMENTS,
   VALUE_CACHE,
+  VALUE_CHOICE_ELEMENTS,
 } from "../constants.ts";
 import type { QdeToJsonResult } from "./types.ts";
 import { validateQdeJson } from "./validate.ts";
@@ -68,7 +69,15 @@ class XmlToJsonParser {
       element.childNodes.length === 1 &&
       element.firstChild?.nodeType === 3
     ) {
-      return element.firstChild.textContent || "";
+      const rawText = element.firstChild.textContent || "";
+      if (VALUE_CHOICE_ELEMENTS.has(tagName)) {
+        if (tagName === "BooleanValue") return rawText === "true" ? true : rawText === "false" ? false : rawText;
+        if (tagName === "IntegerValue") return INT_REGEX.test(rawText) ? parseInt(rawText, 10) : rawText;
+        if (tagName === "FloatValue") return FLOAT_REGEX.test(rawText) ? parseFloat(rawText) : rawText;
+        // TextValue, DateValue, DateTimeValue remain strings
+        return rawText;
+      }
+      return rawText;
     }
 
     // Early exit for completely empty elements

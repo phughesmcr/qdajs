@@ -59,6 +59,10 @@ export const ALWAYS_ARRAYS = new Set([
   "SourceRef",
   "SelectionRef",
   "VariableValue",
+  // Set membership elements should always be arrays
+  "MemberCode",
+  "MemberSource",
+  "MemberNote",
   "Vertex",
   "Edge",
 ]);

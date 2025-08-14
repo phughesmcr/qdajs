@@ -167,8 +167,14 @@ export class Project {
           },
         }
         : {}),
-      // Include CodeBook as-is (may contain origin metadata even if empty)
-      ...(this.codeBook ? { CodeBook: this.codeBook.toJson() } : {}),
+      // Include CodeBook only when it contains meaningful data
+      ...((this.codeBook && (
+          (this.codeBook.codes?.length ?? 0) > 0 ||
+          (this.codeBook.sets?.length ?? 0) > 0 ||
+          (this.codeBook.origin ?? "") !== ""
+        ))
+        ? { CodeBook: this.codeBook.toJson() }
+        : {}),
       ...(this.variables.length > 0
         ? {
           Variables: {
