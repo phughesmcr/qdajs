@@ -54,7 +54,7 @@ Deno.test("QDPX Core Functionality Tests", async (t) => {
     assert(parseOk, "Should parse QDE XML");
 
     const sourceFiles = createResearchSourceFiles();
-    const qdpxBlob = await pack(qdeJson.qde as Record<string, unknown>, sourceFiles);
+    const qdpxBlob = await pack(qdeJson.qde, sourceFiles);
 
     assertExists(qdpxBlob, "Pack should return a Blob");
     assert(qdpxBlob instanceof Blob, "Result should be a Blob");
@@ -84,7 +84,7 @@ Deno.test("QDPX Core Functionality Tests", async (t) => {
     const sourceFiles = createResearchSourceFiles();
 
     // Pack
-    const qdpxBlob = await pack(qdeJson.qde as Record<string, unknown>, sourceFiles);
+    const qdpxBlob = await pack(qdeJson.qde, sourceFiles);
 
     // Unpack
     const [unpackOk, unpacker] = await unpack(qdpxBlob);
@@ -118,7 +118,7 @@ Deno.test("QDPX Core Functionality Tests", async (t) => {
       { path: "recording.m4a", content: new ArrayBuffer(500), mimeType: "audio/mp4" },
     ];
 
-    const qdpxBlob = await pack(qdeJson.qde as Record<string, unknown>, diverseFiles);
+    const qdpxBlob = await pack(qdeJson.qde, diverseFiles);
     const [unpackOk, unpacker] = await unpack(qdpxBlob);
 
     assert(unpackOk, "Should handle diverse file types");
@@ -133,7 +133,7 @@ Deno.test("QDPX Core Functionality Tests", async (t) => {
     assert(parseOk, "Should parse QDE XML");
 
     // Pack with no source files
-    const qdpxBlob = await pack(qdeJson.qde as Record<string, unknown>, []);
+    const qdpxBlob = await pack(qdeJson.qde, []);
     const [unpackOk, unpacker] = await unpack(qdpxBlob);
 
     assert(unpackOk, "Should handle project-only QDPX");
@@ -181,7 +181,7 @@ Deno.test("QDPX Error Handling Tests", async (t) => {
     ];
 
     await assertRejects(
-      () => pack(qdeJson.qde as Record<string, unknown>, invalidFiles, { validateSources: true }),
+      () => pack(qdeJson.qde, invalidFiles, { validateSources: true }),
       Error,
       "Invalid source file",
       "Should reject files violating REFI-QDA standards",
@@ -203,7 +203,7 @@ Deno.test("QDPX Error Handling Tests", async (t) => {
     ];
 
     await assertRejects(
-      () => pack(qdeJson.qde as Record<string, unknown>, nestedPathFiles, { validateSources: true }),
+      () => pack(qdeJson.qde, nestedPathFiles, { validateSources: true }),
       Error,
       "flat",
       "Should reject files with nested paths",
@@ -232,7 +232,7 @@ Deno.test("QDPX Real-world Usage Tests", async (t) => {
       { path: "facility_photo.jpg", content: new ArrayBuffer(300), mimeType: "image/jpeg" },
     ];
 
-    const qdpxBlob = await pack(qdeJson.qde as Record<string, unknown>, researchProject);
+    const qdpxBlob = await pack(qdeJson.qde, researchProject);
     const [unpackOk, unpacker] = await unpack(qdpxBlob);
 
     assert(unpackOk, "Should handle realistic research project");
@@ -266,7 +266,7 @@ Deno.test("QDPX Real-world Usage Tests", async (t) => {
       { path: "sample.txt", content: "Minimal test data" },
     ];
 
-    const qdpxBlob = await pack(qdeJson.qde as Record<string, unknown>, sourceFiles);
+    const qdpxBlob = await pack(qdeJson.qde, sourceFiles);
     const [unpackOk, unpacker] = await unpack(qdpxBlob);
 
     assert(unpackOk, "Should work with minimal QDE");

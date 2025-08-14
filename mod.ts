@@ -1,5 +1,5 @@
 /**
- * @module Main entry point for QDAJS library
+ * Main entry point for QDAJS library
  *
  * QDAJS is a Deno library for working with QDE (Qualitative Data Exchange) and QDPX (QDA Project Exchange) files.
  * The library provides bidirectional conversion between QDE XML format and JSON, plus functionality to pack/unpack
@@ -18,14 +18,16 @@
  * // Unpack QDPX archive
  * const [unpackOk, unpacker] = await qdpx.unpack("project.qdpx");
  * ```
+ *
+ * @module
  */
 
 import { jsonToQde } from "./src/qde/jsonToXml.ts";
 import { validateQdeJson } from "./src/qde/validate.ts";
 import { qdeToJson } from "./src/qde/xmlToJson.ts";
 import { pack, type PackQdpxOptions, type SourceFile, type ValidationResult } from "./src/qdpx/pack.ts";
-import { type Entry, type QdpxUnpacker, unpack, type UnpackQdpxOptions } from "./src/qdpx/unpack.ts";
-import type { JsonToQdeResult, QdeToJsonResult, Result } from "./src/types.ts";
+import { type QdpxUnpacker, unpack, type UnpackQdpxOptions } from "./src/qdpx/unpack.ts";
+import type { Result } from "./src/types.ts";
 
 /**
  * QDE (Qualitative Data Exchange) module for XML/JSON conversion and validation
@@ -112,14 +114,4 @@ export const qdpx = {
  */
 export default { qde, qdpx };
 
-export type {
-  Entry,
-  JsonToQdeResult,
-  PackQdpxOptions,
-  QdeToJsonResult,
-  QdpxUnpacker,
-  Result,
-  SourceFile,
-  UnpackQdpxOptions,
-  ValidationResult,
-};
+export type { PackQdpxOptions, QdpxUnpacker, Result, SourceFile, UnpackQdpxOptions, ValidationResult };

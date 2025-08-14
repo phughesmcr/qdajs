@@ -1,32 +1,28 @@
 /**
- * @module QDE XML to JSON Conversion
+ * QDE XML to JSON Conversion
  *
  * High-performance XML parsing module for QDE (Qualitative Data Exchange) files.
  * Uses optimized DOM parsing with singleton patterns, value caching, and schema-aware conversion
  * for efficient processing of large QDA-XML files.
  *
- * Key optimizations:
- * - Singleton DOMParser instance for reuse
- * - Value caching for common attribute conversions
- * - Direct attribute indexing instead of iterator methods
- * - Schema-aware element categorization
- * - Fast path processing for reference elements
+ * @module
  */
 
 import { DOMParser, type Element } from "@xmldom/xmldom";
 
 import {
-  alwaysArrays,
-  elementsWithAttributes,
+  ALWAYS_ARRAYS,
+  ELEMENTS_WITH_ATTRIBUTES,
   EMPTY_OBJECT,
-  ERROR_NO_ROOT,
   FLOAT_REGEX,
   INT_REGEX,
-  referenceElements,
+  REF_ELEMENTS,
   VALUE_CACHE,
 } from "../constants.ts";
-import type { QdeToJsonResult } from "../types.ts";
+import type { QdeToJsonResult } from "./types.ts";
 import { validateQdeJson } from "./validate.ts";
+
+const ERROR_NO_ROOT = "No root element found in QDE document";
 
 class XmlToJsonParser {
   // Singleton parser instance for reuse
@@ -61,7 +57,7 @@ class XmlToJsonParser {
     const tagName = element.tagName;
 
     // Fast path for reference elements - very common in QDA files
-    if (referenceElements.has(tagName)) {
+    if (REF_ELEMENTS.has(tagName)) {
       const targetGUID = element.getAttribute("targetGUID");
       return targetGUID ? { targetGUID } : "";
     }
@@ -89,7 +85,7 @@ class XmlToJsonParser {
     const processedAttrs = XmlToJsonParser.#processAttributes(element);
     const hasAttributes = processedAttrs !== EMPTY_OBJECT;
     if (hasAttributes) {
-      const shouldUseAttributesObject = elementsWithAttributes.has(element.tagName);
+      const shouldUseAttributesObject = ELEMENTS_WITH_ATTRIBUTES.has(element.tagName);
       if (shouldUseAttributesObject) {
         result["_attributes"] = processedAttrs;
       } else {
@@ -134,7 +130,7 @@ class XmlToJsonParser {
     for (const childTagName in children) {
       const childArray = children[childTagName];
       const childCount = childArray?.length ?? 0;
-      if (alwaysArrays.has(childTagName) || childCount > 1) {
+      if (ALWAYS_ARRAYS.has(childTagName) || childCount > 1) {
         result[childTagName] = childArray ?? [];
       } else {
         result[childTagName] = childArray?.[0] ?? "";

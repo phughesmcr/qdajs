@@ -60,7 +60,7 @@ Deno.test("QDPX Pack and Unpack Functionality", async (t) => {
     assert(parseOk, "Should parse QDE XML to JSON");
 
     const sourceFiles = createTestSourceFiles();
-    const qdpxBlob = await pack(qdeJson.qde as Record<string, unknown>, sourceFiles);
+    const qdpxBlob = await pack(qdeJson.qde, sourceFiles);
 
     assertExists(qdpxBlob, "Pack should return a Blob");
     assert(qdpxBlob instanceof Blob, "Result should be a Blob");
@@ -106,7 +106,7 @@ Deno.test("QDPX Pack and Unpack Functionality", async (t) => {
     const sourceFiles = createTestSourceFiles();
 
     // Pack the QDE JSON and source files
-    const qdpxBlob = await pack(qdeJson.qde as Record<string, unknown>, sourceFiles);
+    const qdpxBlob = await pack(qdeJson.qde, sourceFiles);
 
     // Unpack and verify content
     const [unpackOk, unpacker] = await unpack(qdpxBlob);
@@ -154,7 +154,7 @@ Deno.test("QDPX Pack and Unpack Functionality", async (t) => {
       { path: "focus_group.mp4", content: new ArrayBuffer(1200), mimeType: "video/mp4" },
     ];
 
-    const qdpxBlob = await pack(qdeJson.qde as Record<string, unknown>, researchFiles);
+    const qdpxBlob = await pack(qdeJson.qde, researchFiles);
     const [unpackOk, unpacker] = await unpack(qdpxBlob);
 
     assert(unpackOk, "Should handle diverse research file types");
@@ -170,7 +170,7 @@ Deno.test("QDPX Pack and Unpack Functionality", async (t) => {
     assert(parseOk, "Should parse QDE XML");
 
     // Pack with no source files (common for sharing just the coding scheme)
-    const qdpxBlob = await pack(qdeJson.qde as Record<string, unknown>, []);
+    const qdpxBlob = await pack(qdeJson.qde, []);
     const [unpackOk, unpacker] = await unpack(qdpxBlob);
 
     assert(unpackOk, "Should handle project-only QDPX");
@@ -217,7 +217,7 @@ Deno.test("QDPX Real-world Usage Scenarios", async (t) => {
       { path: "accessibility_features.png", content: new ArrayBuffer(350), mimeType: "image/png" },
     ];
 
-    const qdpxBlob = await pack(qdeJson.qde as Record<string, unknown>, researchProject);
+    const qdpxBlob = await pack(qdeJson.qde, researchProject);
     const [unpackOk, unpacker] = await unpack(qdpxBlob);
 
     assert(unpackOk, "Should handle realistic research project structure");
@@ -253,7 +253,7 @@ Deno.test("QDPX Real-world Usage Scenarios", async (t) => {
       { path: "sample_transcript.txt", content: "This is test interview data for QDA analysis." },
     ];
 
-    const qdpxBlob = await pack(qdeJson.qde as Record<string, unknown>, testFiles);
+    const qdpxBlob = await pack(qdeJson.qde, testFiles);
     const [unpackOk, unpacker] = await unpack(qdpxBlob);
 
     assert(unpackOk, "Should work with minimal QDE structure");

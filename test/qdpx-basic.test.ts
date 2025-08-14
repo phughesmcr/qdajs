@@ -27,7 +27,7 @@ Deno.test("QDPX Basic Functionality", async (t) => {
     ];
 
     // Pack
-    const qdpxBlob = await pack(qdeJson.qde as Record<string, unknown>, sourceFiles);
+    const qdpxBlob = await pack(qdeJson.qde, sourceFiles);
     assertExists(qdpxBlob, "Pack should return a Blob");
     assert(qdpxBlob.size > 0, "QDPX file should have content");
 
@@ -63,7 +63,7 @@ Deno.test("QDPX Basic Functionality", async (t) => {
     assert(parseOk, "Should parse QDE XML");
 
     // Pack with no source files
-    const qdpxBlob = await pack(qdeJson.qde as Record<string, unknown>, []);
+    const qdpxBlob = await pack(qdeJson.qde, []);
 
     // Unpack
     const [unpackOk, unpacker] = await unpack(qdpxBlob);

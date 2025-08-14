@@ -5,7 +5,7 @@
  * Tests various scenarios including data sizes, DOM construction, and serialization patterns
  */
 
-import { jsonToQde } from "../src/convert/jsonToXml.ts";
+import { jsonToQde } from "../src/qde/jsonToXml.ts";
 import type { JsonObject } from "../src/types.ts";
 
 // Load test data
@@ -40,12 +40,17 @@ const smallJsonData: JsonObject = {
 };
 
 // Create medium-sized data by taking subset of full data
+// Build medium data using safe stepwise property access to avoid implicit any
+const codeBookObj = fullQdeData["CodeBook"] as Record<string, unknown> | undefined;
+const codesContainer = codeBookObj?.["Codes"] as Record<string, unknown> | undefined;
+const codesArray = codesContainer?.["Code"] as unknown[] | undefined;
+
 const mediumJsonData: JsonObject = {
-  "_attributes": fullQdeData["_attributes"],
-  "Users": fullQdeData["Users"],
+  "_attributes": fullQdeData["_attributes"] as Record<string, unknown>,
+  "Users": fullQdeData["Users"] as Record<string, unknown>,
   "CodeBook": {
     "Codes": {
-      "Code": (fullQdeData["CodeBook"] as JsonObject)?.["Codes"]?.["Code"]?.slice(0, 10) || [],
+      "Code": Array.isArray(codesArray) ? codesArray.slice(0, 10) as unknown[] : [],
     },
   },
 };
@@ -188,76 +193,76 @@ const mixedContentData: JsonObject = {
 // Benchmark: Small JSON to XML conversion
 Deno.bench("JSON to XML - Small data (< 1KB)", () => {
   const result = jsonToQde(smallJsonData);
-  if (result[1]) throw result[1];
+  if (!result[0]) throw result[1];
 });
 
 // Benchmark: Medium JSON to XML conversion
 Deno.bench("JSON to XML - Medium data (~50KB)", () => {
   const result = jsonToQde(mediumJsonData);
-  if (result[1]) throw result[1];
+  if (!result[0]) throw result[1];
 });
 
 // Benchmark: Full JSON to XML conversion (primary performance test)
 Deno.bench("JSON to XML - Full data (~1.1MB)", () => {
   const result = jsonToQde(fullQdeData);
-  if (result[1]) throw result[1];
+  if (!result[0]) throw result[1];
 });
 
 // Benchmark: Normalized format (with qde wrapper)
 Deno.bench("JSON to XML - Normalized format", () => {
   const result = jsonToQde({ qde: fullQdeData });
-  if (result[1]) throw result[1];
+  if (!result[0]) throw result[1];
 });
 
 // Benchmark: Attribute-heavy structure (DOM attribute processing)
 Deno.bench("JSON to XML - Attribute heavy (100 users)", () => {
   const result = jsonToQde(attributeHeavyData);
-  if (result[1]) throw result[1];
+  if (!result[0]) throw result[1];
 });
 
 // Benchmark: Text-heavy structure (text node creation)
 Deno.bench("JSON to XML - Text heavy (large descriptions)", () => {
   const result = jsonToQde(textHeavyData);
-  if (result[1]) throw result[1];
+  if (!result[0]) throw result[1];
 });
 
 // Benchmark: Deeply nested structure (DOM tree depth)
 Deno.bench("JSON to XML - Deeply nested (5 levels)", () => {
   const result = jsonToQde(deeplyNestedData);
-  if (result[1]) throw result[1];
+  if (!result[0]) throw result[1];
 });
 
 // Benchmark: Array-heavy structure (array processing)
 Deno.bench("JSON to XML - Array heavy (500 users, 200 codes)", () => {
   const result = jsonToQde(arrayHeavyData);
-  if (result[1]) throw result[1];
+  if (!result[0]) throw result[1];
 });
 
 // Benchmark: Mixed content structure (text + elements)
 Deno.bench("JSON to XML - Mixed content", () => {
   const result = jsonToQde(mixedContentData);
-  if (result[1]) throw result[1];
+  if (!result[0]) throw result[1];
 });
 
 // Benchmark: DOM implementation reuse (testing singleton efficiency)
 Deno.bench("JSON to XML - DOM reuse (10 small conversions)", () => {
   for (let i = 0; i < 10; i++) {
     const result = jsonToQde(smallJsonData);
-    if (result[1]) throw result[1];
+    if (!result[0]) throw result[1];
   }
 });
 
 // Benchmark: Schema validation overhead
 Deno.bench("JSON to XML - With schema validation", () => {
   const result = jsonToQde(fullQdeData);
-  if (result[1]) throw result[1];
+  if (!result[0]) throw result[1];
 });
 
 // Benchmark: Memory pressure test (multiple large conversions)
 Deno.bench("JSON to XML - Memory pressure (3x full data)", () => {
   for (let i = 0; i < 3; i++) {
     const result = jsonToQde(fullQdeData);
-    if (result[1]) throw result[1];
+    if (!result[0]) throw result[1];
   }
 });
 
@@ -267,7 +272,7 @@ const invalidData = { invalid: true }; // Missing required fields
 Deno.bench("JSON to XML - Error handling (invalid data)", () => {
   const result = jsonToQde(invalidData);
   // Expect error, measure error handling performance
-  if (!result[1]) throw new Error("Expected validation error");
+  if (result[0]) throw new Error("Expected validation error");
 });
 
 // Benchmark: Serialization performance (DOM to string)
@@ -286,5 +291,5 @@ Deno.bench("JSON to XML - Serialization heavy (wide structure)", () => {
   };
 
   const result = jsonToQde(wideData);
-  if (result[1]) throw result[1];
+  if (!result[0]) throw result[1];
 });

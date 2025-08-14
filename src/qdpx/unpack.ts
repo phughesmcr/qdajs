@@ -1,18 +1,15 @@
 /**
- * @module QDPX Archive Unpacking
+ * QDPX Archive Unpacking
  *
  * QDPX unpacking module for extracting QDE projects and source files from ZIP archives.
  * Provides async access to project.qde files and source file extraction with proper
  * resource management and error handling.
  *
- * Uses @zip-js/zip-js for efficient ZIP file processing with streaming support
- * for large archives and memory-conscious extraction.
+ * @module
  */
 import { BlobReader, type Entry, terminateWorkers, ZipReader } from "@zip-js/zip-js";
 
 import type { Result } from "../types.ts";
-
-export type { Entry };
 
 export type QdpxUnpacker = {
   entries: Entry[];

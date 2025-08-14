@@ -1,26 +1,19 @@
 /**
- * @module QDE JSON to XML Conversion
+ * QDE JSON to XML Conversion
  *
  * High-performance JSON to XML converter for QDE (Qualitative Data Exchange) files.
  * Uses DOM construction with XMLSerializer for proper escaping and formatting.
  * Optimized for large QDA-XML files with static methods, DOM caching, and schema-aware conversion.
  *
- * Key features:
- * - Singleton DOMImplementation for reuse
- * - Schema-aware attribute vs element decisions
- * - Proper XML escaping via DOM methods
- * - Support for both normalized and raw JSON formats
- * - Comprehensive validation integration
+ * @module
  */
 
 import { type Document, DOMImplementation, type Element, XMLSerializer } from "@xmldom/xmldom";
 
-import { elementFields } from "../constants.ts";
-import type { Project } from "../schema.ts";
-import type { JsonToQdeResult, QdeToJsonResult } from "../types.ts";
+import { ELEMENT_FIELDS } from "../constants.ts";
+import type { JsonToQdeResult } from "./types.ts";
 import { validateQdeJson } from "./validate.ts";
 
-// Pre-created error messages to avoid string operations during errors
 const ERROR_INVALID_INPUT = "Invalid input: expected object with QDE data";
 const ERROR_INVALID_QDE_FIELD = "Invalid QDE data: qde field must be an object";
 const ERROR_ROOT_NOT_OBJECT = "Root data must be an object";
@@ -101,7 +94,7 @@ class JsonToXmlConverter {
       } else if (key === "_text") {
         textContent = String(value);
         hasTextContent = true;
-      } else if (JsonToXmlConverter.#isPrimitiveValue(value) && !elementFields.has(key)) {
+      } else if (JsonToXmlConverter.#isPrimitiveValue(value) && !ELEMENT_FIELDS.has(key)) {
         // Schema-aware attribute vs element decision - DOM handles escaping
         element.setAttribute(key, String(value));
       } else {
@@ -189,7 +182,7 @@ class JsonToXmlConverter {
  * }
  * ```
  */
-export function jsonToQde(json: Project | QdeToJsonResult): JsonToQdeResult {
+export function jsonToQde(json: unknown): JsonToQdeResult {
   try {
     // Input validation with specific error messages
     if (typeof json !== "object" || json === null) {
@@ -199,11 +192,12 @@ export function jsonToQde(json: Project | QdeToJsonResult): JsonToQdeResult {
     let rawData: Record<string, unknown>;
 
     // Handle normalized format { qde: {...} }
-    if ("qde" in json) {
-      if (typeof json["qde"] !== "object" || json["qde"] === null) {
+    if ("qde" in (json as Record<string, unknown>)) {
+      const normalized = json as { qde: unknown };
+      if (typeof normalized.qde !== "object" || normalized.qde === null) {
         return [false, new Error(ERROR_INVALID_QDE_FIELD)];
       }
-      rawData = json["qde"] as Record<string, unknown>;
+      rawData = normalized.qde as Record<string, unknown>;
     } else {
       // Use input directly as raw QDA data
       rawData = json as Record<string, unknown>;

@@ -1,5 +1,5 @@
 /**
- * @module QDPX Archive Packing
+ * QDPX Archive Packing
  *
  * QDPX packing module for creating QDE project archives with source files.
  * Provides comprehensive validation, REFI-QDA compliance checking, and efficient
@@ -13,14 +13,16 @@
  *
  * Automatically organizes files in proper QDPX structure with project.qde
  * at root and source files in sources/ directory.
+ *
+ * @module
  */
 
 import { BlobReader, BlobWriter, terminateWorkers, TextReader, ZipWriter } from "@zip-js/zip-js";
 
 import { jsonToQde } from "../qde/jsonToXml.ts";
+import type { ProjectJson } from "../qde/types.ts";
 import { validateQdeJson } from "../qde/validate.ts";
 import { qdeToJson } from "../qde/xmlToJson.ts";
-import type { Project } from "../schema.ts";
 
 export type PackQdpxOptions = {
   password?: string;
@@ -214,14 +216,14 @@ async function zip(
   return zipFileWriter.getData();
 }
 
-function validateProject(qde: unknown): Project {
+function validateProject(qde: unknown): ProjectJson {
   // if qde is a string, convert to Project
   if (typeof qde === "string") {
     const [xmlValid, xmlResult] = qdeToJson(qde);
     if (!xmlValid) {
       throw new Error(`Failed to convert QDE to XML: ${xmlResult}`);
     }
-    return xmlResult.qde as Project;
+    return xmlResult.qde as ProjectJson;
   } else {
     // if qde is a Project, validate it
     const [valid, result] = validateQdeJson(qde);
@@ -289,7 +291,7 @@ export async function pack(
 
   // if qde is a Project, convert to XML
   if (typeof qde === "object") {
-    const [xmlValid, xmlResult] = jsonToQde(qde as Project);
+    const [xmlValid, xmlResult] = jsonToQde(qde as ProjectJson);
     if (!xmlValid) {
       throw new Error(`Failed to convert QDE to XML: ${xmlResult}`);
     }

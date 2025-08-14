@@ -5,8 +5,8 @@
  * Tests data consistency and performance of full conversion cycles
  */
 
-import { qdeToJson } from "../src/convert/xmlToJson.ts";
-import { jsonToQde } from "../src/convert/jsonToXml.ts";
+import { jsonToQde } from "../src/qde/jsonToXml.ts";
+import { qdeToJson } from "../src/qde/xmlToJson.ts";
 
 // Load test data
 const fullXmlData = await Deno.readTextFile("docs/example.qde");
@@ -53,44 +53,44 @@ const mediumXML = `<?xml version="1.0" encoding="utf-8"?>
 Deno.bench("Round-trip - Small file (XML → JSON → XML)", () => {
   // XML to JSON
   const jsonResult = qdeToJson(smallXml);
-  if (jsonResult[1]) throw jsonResult[1];
+  if (!jsonResult[0]) throw jsonResult[1];
 
   // JSON back to XML
-  const xmlResult = jsonToQde(jsonResult[0]!);
-  if (xmlResult[1]) throw xmlResult[1];
+  const xmlResult = jsonToQde(jsonResult[1]!);
+  if (!xmlResult[0]) throw xmlResult[1];
 });
 
 // Benchmark: Medium XML → JSON → XML round trip
 Deno.bench("Round-trip - Medium file (XML → JSON → XML)", () => {
   // XML to JSON
   const jsonResult = qdeToJson(mediumXML);
-  if (jsonResult[1]) throw jsonResult[1];
+  if (!jsonResult[0]) throw jsonResult[1];
 
   // JSON back to XML
-  const xmlResult = jsonToQde(jsonResult[0]!);
-  if (xmlResult[1]) throw xmlResult[1];
+  const xmlResult = jsonToQde(jsonResult[1]!);
+  if (!xmlResult[0]) throw xmlResult[1];
 });
 
 // Benchmark: Full XML → JSON → XML round trip (primary integration test)
 Deno.bench("Round-trip - Full file (XML → JSON → XML)", () => {
   // XML to JSON
   const jsonResult = qdeToJson(fullXmlData);
-  if (jsonResult[1]) throw jsonResult[1];
+  if (!jsonResult[0]) throw jsonResult[1];
 
   // JSON back to XML
-  const xmlResult = jsonToQde(jsonResult[0]!);
-  if (xmlResult[1]) throw xmlResult[1];
+  const xmlResult = jsonToQde(jsonResult[1]!);
+  if (!xmlResult[0]) throw xmlResult[1];
 });
 
 // Benchmark: JSON → XML → JSON round trip
 Deno.bench("Round-trip - Full file (JSON → XML → JSON)", () => {
   // JSON to XML
   const xmlResult = jsonToQde(fullJsonData);
-  if (xmlResult[1]) throw xmlResult[1];
+  if (!xmlResult[0]) throw xmlResult[1];
 
   // XML back to JSON
-  const jsonResult = qdeToJson(xmlResult[0]!.qde);
-  if (jsonResult[1]) throw jsonResult[1];
+  const jsonResult = qdeToJson(xmlResult[1]!.qde);
+  if (!jsonResult[0]) throw jsonResult[1];
 });
 
 // Benchmark: Multiple round trips (stress test)
@@ -100,13 +100,13 @@ Deno.bench("Round-trip - Multiple cycles (5x small file)", () => {
   for (let i = 0; i < 5; i++) {
     // XML to JSON
     const jsonResult = qdeToJson(currentXml);
-    if (jsonResult[1]) throw jsonResult[1];
+    if (!jsonResult[0]) throw jsonResult[1];
 
     // JSON back to XML
-    const xmlResult = jsonToQde(jsonResult[0]!);
-    if (xmlResult[1]) throw xmlResult[1];
+    const xmlResult = jsonToQde(jsonResult[1]!);
+    if (!xmlResult[0]) throw xmlResult[1];
 
-    currentXml = xmlResult[0]!.qde;
+    currentXml = xmlResult[1]!.qde;
   }
 });
 
@@ -114,19 +114,19 @@ Deno.bench("Round-trip - Multiple cycles (5x small file)", () => {
 Deno.bench("Round-trip - With data consistency check", () => {
   // XML to JSON
   const jsonResult = qdeToJson(fullXmlData);
-  if (jsonResult[1]) throw jsonResult[1];
+  if (!jsonResult[0]) throw jsonResult[1];
 
   // JSON back to XML
-  const xmlResult = jsonToQde(jsonResult[0]!);
-  if (xmlResult[1]) throw xmlResult[1];
+  const xmlResult = jsonToQde(jsonResult[1]!);
+  if (!xmlResult[0]) throw xmlResult[1];
 
   // Verify round-trip by converting back to JSON
-  const verifyResult = qdeToJson(xmlResult[0]!.qde);
-  if (verifyResult[1]) throw verifyResult[1];
+  const verifyResult = qdeToJson(xmlResult[1]!.qde);
+  if (!verifyResult[0]) throw verifyResult[1];
 
   // Basic consistency check (structure should be similar)
-  const original = jsonResult[0]!.qde["_attributes"];
-  const roundTrip = verifyResult[0]!.qde["_attributes"];
+  const original = (jsonResult[1] as any)!.qde["_attributes"];
+  const roundTrip = (verifyResult[1] as any)!.qde["_attributes"];
 
   if (!original || !roundTrip) {
     throw new Error("Missing project attributes after round-trip");
@@ -142,11 +142,11 @@ Deno.bench("Round-trip - Memory efficiency (10x medium file)", () => {
   for (let i = 0; i < 10; i++) {
     // XML to JSON
     const jsonResult = qdeToJson(mediumXML);
-    if (jsonResult[1]) throw jsonResult[1];
+    if (!jsonResult[0]) throw jsonResult[1];
 
     // JSON back to XML
-    const xmlResult = jsonToQde(jsonResult[0]!);
-    if (xmlResult[1]) throw xmlResult[1];
+    const xmlResult = jsonToQde(jsonResult[1]!);
+    if (!xmlResult[0]) throw xmlResult[1];
 
     // Don't accumulate results to test garbage collection
   }
@@ -158,12 +158,12 @@ Deno.bench("Round-trip - Error handling", () => {
 
   // First conversion should fail
   const jsonResult = qdeToJson(invalidXml);
-  if (!jsonResult[1]) throw new Error("Expected XML parsing error");
+  if (jsonResult[0]) throw new Error("Expected XML parsing error");
 
   // Try with valid data after error
   const validJsonResult = qdeToJson(smallXml);
-  if (validJsonResult[1]) throw validJsonResult[1];
+  if (!validJsonResult[0]) throw validJsonResult[1];
 
-  const xmlResult = jsonToQde(validJsonResult[0]!);
-  if (xmlResult[1]) throw xmlResult[1];
+  const xmlResult = jsonToQde(validJsonResult[1]!);
+  if (!xmlResult[0]) throw xmlResult[1];
 });

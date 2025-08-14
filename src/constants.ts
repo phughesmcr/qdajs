@@ -1,22 +1,12 @@
 /**
- * @module Performance Optimizations and Constants
- *
- * Core constants, performance optimizations, and caching mechanisms for QDAJS library.
- * Contains schema-aware element categorization, value caches, regex patterns, and
- * domain-specific constants for efficient QDE/QDPX processing.
- *
- * Key optimizations:
- * - Pre-compiled regex patterns for number/date detection
- * - Value caching for common attribute conversions
- * - Element categorization using Sets for O(1) lookups
- * - Static error messages to avoid string operations
- * - Schema-aware attribute vs element decisions
+ * Shared constants
+ * @module
  */
 
 import type { JsonValue } from "./types.ts";
 
 /** Schema-aware performance optimization sets */
-export const referenceElements = new Set([
+export const REF_ELEMENTS = new Set([
   "CodeRef",
   "NoteRef",
   "SourceRef",
@@ -24,13 +14,13 @@ export const referenceElements = new Set([
   "VariableRef",
 ]);
 
-export const simpleTextElements = new Set([
+export const TEXT_ELEMENTS = new Set([
   "Description",
   "PlainTextContent",
   "TextValue",
 ]);
 
-export const valueChoiceElements = new Set([
+export const VALUE_CHOICE_ELEMENTS = new Set([
   "TextValue",
   "BooleanValue",
   "IntegerValue",
@@ -40,7 +30,7 @@ export const valueChoiceElements = new Set([
 ]);
 
 /** Elements that should always be arrays according to the schema */
-export const alwaysArrays = new Set([
+export const ALWAYS_ARRAYS = new Set([
   "User",
   "Code",
   "Variable",
@@ -76,13 +66,13 @@ export const alwaysArrays = new Set([
 /**
  * Elements that need _attributes object according to the schema
  */
-export const elementsWithAttributes = new Set(["Project", "Code"]);
+export const ELEMENTS_WITH_ATTRIBUTES = new Set(["Project", "Code"]);
 
 /**
  * Fields that should be XML elements (not attributes) even when they contain primitive values
  * Based on schema.xsd element definitions
  */
-export const elementFields = new Set([
+export const ELEMENT_FIELDS = new Set([
   // Core container elements
   "Users",
   "CodeBook",
@@ -149,7 +139,7 @@ export const elementFields = new Set([
   "MemberNote",
 ]);
 
-export const sourceTypes = [
+export const SOURCE_TYPES = [
   "TextSource",
   "PictureSource",
   "PDFSource",
@@ -157,7 +147,7 @@ export const sourceTypes = [
   "VideoSource",
 ];
 
-export const selectionTypes = [
+export const SELECTION_TYPES = [
   "PlainTextSelection",
   "PictureSelection",
   "PDFSelection",
@@ -180,17 +170,11 @@ export const VALUE_CACHE = new Map<string, JsonValue>([
 export const EMPTY_OBJECT = {};
 export const FLOAT_REGEX = /^-?\d*\.\d+$/;
 export const INT_REGEX = /^-?\d+$/;
-export const guidPattern =
-  /^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})|(\{[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}\})$/;
-export const rgbPattern = /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/;
-export const isoDatePattern = /^\d{4}-\d{2}-\d{2}$/;
-export const isoDateTimePattern = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})?$/;
-
-// Pre-created error messages to avoid string operations during errors
-export const ERROR_NO_ROOT = "No root element found in QDE document";
-export const ERROR_INVALID_PROJECT = "Invalid QDE project: root element must be an object";
-export const ERROR_MISSING_NAME = "Invalid QDE project: missing Project element or name attribute";
-export const ERROR_SCHEMA_FAILED = "Schema validation failed";
+export const RGB_REGEX = /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/;
+export const ISO_DATE_REGEX = /^\d{4}-\d{2}-\d{2}$/;
+export const ISO_DATETIME_REGEX = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})?$/;
+// @deno-fmt-ignore
+export const GUID_REGEX = /^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})|(\{[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}\})$/;
 
 // QDE constants
 
@@ -205,10 +189,10 @@ export const SHAPES = [
   "UpTriangle",
   "DownTriangle",
   "Note",
-];
+] as const;
 
-export const DIRECTIONS = ["Associative", "OneWay", "Bidirectional"];
+export const DIRECTIONS = ["Associative", "OneWay", "Bidirectional"] as const;
 
-export const VARIABLE_TYPES = ["Text", "Boolean", "Integer", "Float", "Date", "DateTime"];
+export const VARIABLE_TYPES = ["Text", "Boolean", "Integer", "Float", "Date", "DateTime"] as const;
 
-export const LINE_STYLES = ["dotted", "dashed", "solid"];
+export const LINE_STYLES = ["dotted", "dashed", "solid"] as const;

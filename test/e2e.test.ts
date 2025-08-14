@@ -3,6 +3,7 @@
 import { assert, assertEquals, assertExists } from "@std/assert";
 import { configure } from "@zip-js/zip-js";
 import { qde, qdpx } from "../mod.ts";
+import type { ProjectJson } from "../src/qde/types.ts";
 
 const EXAMPLE_QDPX_FILE = "./docs/example.qdpx";
 const TEST_OUTPUT_DIR = "./test/temp_e2e";
@@ -213,7 +214,7 @@ Deno.test("End-to-End QDPX Processing", async (t) => {
       console.log(`✓ Read ${sourceFiles.length} source files from disk`);
 
       // Step 6: Repack with the converted QDE and original source files
-      const repackedBlob = await qdpx.pack(qdeJsonResult.qde as Record<string, unknown>, sourceFiles);
+      const repackedBlob = await qdpx.pack(qdeJsonResult.qde, sourceFiles);
       assertExists(repackedBlob, "Should successfully repack QDPX");
       assert(repackedBlob instanceof Blob, "Repacked result should be a Blob");
       assert(repackedBlob.size > 0, "Repacked QDPX should have content");
@@ -297,7 +298,7 @@ Deno.test("End-to-End QDPX Processing", async (t) => {
     ];
 
     // Pack with mixed file types
-    const mixedQdpx = await qdpx.pack(qdeJson.qde as Record<string, unknown>, testFiles);
+    const mixedQdpx = await qdpx.pack(qdeJson.qde, testFiles);
 
     // Unpack the mixed QDPX
     const [mixedUnpackOk, mixedUnpacker] = await qdpx.unpack(mixedQdpx);
@@ -307,7 +308,7 @@ Deno.test("End-to-End QDPX Processing", async (t) => {
     const originalQde = await (mixedUnpacker as any).readProjectQde();
     const [toJsonOk, jsonResult] = qde.toJson(originalQde);
     assert(toJsonOk, "Should convert QDE to JSON");
-    const [toQdeOk, _qdeResult] = qde.fromJson(jsonResult);
+    const [toQdeOk, _qdeResult] = qde.fromJson((jsonResult as { qde: ProjectJson }).qde as ProjectJson);
     assert(toQdeOk, "Should convert JSON back to QDE");
 
     // Extract source files for repacking using extractAll()
@@ -348,7 +349,7 @@ Deno.test("End-to-End QDPX Processing", async (t) => {
     }
 
     // Repack with converted QDE
-    const finalQdpx = await qdpx.pack(jsonResult.qde as Record<string, unknown>, extractedFiles);
+    const finalQdpx = await qdpx.pack(jsonResult.qde, extractedFiles);
 
     // Final verification
     const [finalUnpackOk, finalUnpacker] = await qdpx.unpack(finalQdpx);

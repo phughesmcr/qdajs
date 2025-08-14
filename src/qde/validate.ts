@@ -1,5 +1,5 @@
 /**
- * @module QDE JSON Validation
+ * QDE JSON Validation
  *
  * Schema validation module for QDE (Qualitative Data Exchange) JSON data.
  * Provides Zod-based runtime validation with comprehensive error reporting
@@ -7,13 +7,19 @@
  *
  * Validates project attributes, required fields, and nested structures
  * according to REFI-QDA standards for qualitative data analysis.
+ *
+ * @module
  */
 
 import type { ZodError } from "zod";
 
-import { ERROR_INVALID_PROJECT, ERROR_MISSING_NAME, ERROR_SCHEMA_FAILED } from "../constants.ts";
-import { type Project, projectSchema } from "../schema.ts";
 import type { Result } from "../types.ts";
+import { projectSchema } from "./schema.ts";
+import type { ProjectJson } from "./types.ts";
+
+const ERROR_INVALID_PROJECT = "Invalid QDE project: root element must be an object";
+const ERROR_MISSING_NAME = "Invalid QDE project: missing Project element or name attribute";
+const ERROR_SCHEMA_FAILED = "Schema validation failed";
 
 /**
  * Validate JSON data against QDE project schema
@@ -41,7 +47,7 @@ import type { Result } from "../types.ts";
  * }
  * ```
  */
-export function validateQdeJson(json: unknown): Result<{ qde: Project }, Error | ZodError> {
+export function validateQdeJson(json: unknown): Result<{ qde: ProjectJson }, Error | ZodError> {
   if (typeof json !== "object" || json === null || Array.isArray(json)) {
     return [false, new Error(ERROR_INVALID_PROJECT)];
   }
@@ -62,5 +68,5 @@ export function validateQdeJson(json: unknown): Result<{ qde: Project }, Error |
       new Error(ERROR_SCHEMA_FAILED, { cause: validationResult.error }),
     ];
   }
-  return [true, { qde: validationResult.data }];
+  return [true, { qde: validationResult.data as ProjectJson }];
 }
