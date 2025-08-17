@@ -21,8 +21,6 @@ export type VariableType = typeof VARIABLE_TYPES[number];
 
 export type LineStyle = typeof LINE_STYLES[number];
 
-export type LinkDirection = "Associative" | "OneWay" | "Bidirectional";
-
 // Source/Selection nominal union types (export for consumers)
 export type SourceType =
   | "TextSource"

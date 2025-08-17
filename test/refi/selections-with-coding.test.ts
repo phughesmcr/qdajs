@@ -12,6 +12,7 @@ Deno.test("Selections with coding round-trip (structure only)", () => {
         {
           guid: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
           name: "text",
+          plainTextPath: "text.txt",
           PlainTextSelection: [
             {
               guid: "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",

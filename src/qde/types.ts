@@ -40,7 +40,7 @@ export interface CodingJson {
   guid: GuidString;
   creatingUser?: GuidString;
   creationDateTime?: string;
-  CodeRef: RefJson;
+  CodeRef?: RefJson;
   NoteRef?: RefJson[];
 }
 
@@ -60,10 +60,6 @@ export interface CodebookJson {
   Codes: {
     Code: CodeJson[];
   };
-  Sets?: {
-    Set: SetJson[];
-  };
-  origin?: string;
 }
 
 export interface UserJson {

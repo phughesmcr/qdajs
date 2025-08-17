@@ -1,6 +1,7 @@
 import { vertexSchema } from "../../qde/schema.ts";
 import type { GuidString, RGBString, VertexJson } from "../../qde/types.ts";
 import type { Shape } from "../../types.ts";
+import { ensureInteger, ensureValidGuid, ensureValidRgbColor } from "../shared/utils.ts";
 
 export type VertexSpec = {
   guid: GuidString;
@@ -15,17 +16,32 @@ export type VertexSpec = {
 };
 
 export class Vertex {
-  name?: string;
+  // #### ATTRIBUTES ####
+
+  /** <xsd:attribute name="guid" type="GUIDType" use="required"/> */
+  readonly guid: GuidString;
+  /** <xsd:attribute name="representedGUID" type="GUIDType"/> */
+  readonly representedGUID?: GuidString;
+  /** <xsd:attribute name="name" type="xsd:string"/> */
+  readonly name?: string;
+  /** <xsd:attribute name="firstX" type="xsd:integer" use="required"/> */
+  readonly firstX: number;
+  /** <xsd:attribute name="firstY" type="xsd:integer" use="required"/> */
+  readonly firstY: number;
+  /** <xsd:attribute name="secondX" type="xsd:integer"/> */
+  readonly secondX?: number;
+  /** <xsd:attribute name="secondY" type="xsd:integer"/> */
+  readonly secondY?: number;
+  /** <xsd:attribute name="shape" type="ShapeType"/> */
   shape?: Shape;
+  /** <xsd:attribute name="color" type="RGBType"/> */
   color?: RGBString;
 
-  readonly guid: GuidString;
-  readonly representedGUID?: GuidString;
-  readonly firstX: number;
-  readonly firstY: number;
-  readonly secondX?: number;
-  readonly secondY?: number;
-
+  /**
+   * Create a Vertex from a JSON object.
+   * @param json - The JSON object to create the Vertex from.
+   * @returns The created Vertex.
+   */
   static fromJson(json: VertexJson): Vertex {
     const result = vertexSchema.safeParse(json);
     if (!result.success) throw new Error(result.error.message);
@@ -56,16 +72,26 @@ export class Vertex {
   }
 
   toJson(): VertexJson {
+    const guid = ensureValidGuid(this.guid, "Vertex.guid");
+    const representedGUID = this.representedGUID
+      ? ensureValidGuid(this.representedGUID, "Vertex.representedGUID")
+      : undefined;
+    const color = this.color ? ensureValidRgbColor(this.color) : undefined;
+    const firstX = ensureInteger(this.firstX, "Vertex.firstX");
+    const firstY = ensureInteger(this.firstY, "Vertex.firstY");
+    const secondX = this.secondX ? ensureInteger(this.secondX, "Vertex.secondX") : undefined;
+    const secondY = this.secondY ? ensureInteger(this.secondY, "Vertex.secondY") : undefined;
+
     return {
-      guid: this.guid,
-      representedGUID: this.representedGUID,
-      name: this.name,
-      firstX: this.firstX,
-      firstY: this.firstY,
-      secondX: this.secondX,
-      secondY: this.secondY,
-      shape: this.shape,
-      color: this.color,
+      guid,
+      ...(representedGUID ? { representedGUID } : {}),
+      ...(this.name ? { name: this.name } : {}),
+      firstX,
+      firstY,
+      ...(secondX ? { secondX } : {}),
+      ...(secondY ? { secondY } : {}),
+      ...(this.shape ? { shape: this.shape } : {}),
+      ...(color ? { color } : {}),
     };
   }
 }

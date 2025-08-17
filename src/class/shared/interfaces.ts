@@ -1,7 +1,8 @@
+import type { GuidString } from "../../qde/types.ts";
 import type { Ref } from "../ref/ref.ts";
 
 export interface Identifiable {
-  guid: string;
+  guid: GuidString;
 }
 
 export interface Named {
@@ -9,7 +10,7 @@ export interface Named {
 }
 
 export interface Described {
-  description?: string;
+  description: string;
 }
 
 export interface HasNoteRefs {
@@ -17,8 +18,8 @@ export interface HasNoteRefs {
 }
 
 export interface Auditable {
-  creatingUser?: string;
-  creationDateTime?: Date;
-  modifyingUser?: string;
-  modifiedDateTime?: Date;
+  creatingUser: GuidString;
+  creationDateTime: Date;
+  modifyingUser: GuidString;
+  modifiedDateTime: Date;
 }

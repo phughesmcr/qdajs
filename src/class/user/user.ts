@@ -1,5 +1,6 @@
 import { userSchema } from "../../qde/schema.ts";
 import type { GuidString, UserJson } from "../../qde/types.ts";
+import { ensureValidGuid } from "../shared/utils.ts";
 
 export type UserSpec = {
   guid: GuidString;
@@ -8,16 +9,24 @@ export type UserSpec = {
 };
 
 export class User {
+  // #### ATTRIBUTES ####
+
+  /** <xsd:attribute name="guid" type="GUIDType" use="required"/> */
+  readonly guid: GuidString;
+  /** <xsd:attribute name="name" type="xsd:string"/> */
   name?: string;
+  /** <xsd:attribute name="id" type="xsd:string"/> */
   id?: string;
 
-  readonly guid: GuidString;
-
+  /**
+   * Create a User from a JSON object.
+   * @param json - The JSON object to create the User from.
+   * @returns The created User.
+   */
   static fromJson(json: UserJson): User {
     const result = userSchema.safeParse(json);
-    if (!result.success) {
-      throw new Error(result.error.message);
-    }
+    if (!result.success) throw new Error(result.error.message);
+
     const data = result.data as unknown as UserJson;
     return new User({
       guid: data.guid,
@@ -26,17 +35,26 @@ export class User {
     });
   }
 
+  /**
+   * Create a User from a specification object.
+   * @param spec - The specification object to create the User from.
+   */
   constructor(spec: UserSpec) {
     this.guid = spec.guid;
     this.name = spec.name;
     this.id = spec.id;
   }
 
+  /**
+   * Convert the User to a JSON object.
+   * @returns The JSON object representing the User.
+   */
   toJson(): UserJson {
     return {
-      guid: this.guid,
-      name: this.name,
-      id: this.id,
+      // TODO: check this doesn't need to be in the _attributes object
+      guid: ensureValidGuid(this.guid, "User.guid"),
+      ...(this.name ? { name: this.name } : {}),
+      ...(this.id ? { id: this.id } : {}),
     };
   }
 }

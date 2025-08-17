@@ -1,37 +1,59 @@
-import type { GuidString, VariableValueJson } from "../../qde/types.ts";
+import type { GuidString } from "../../qde/types.ts";
+import type { VariableValue } from "../case/variableValue.ts";
+import type { Coding } from "../codebook/coding.ts";
 import type { Ref } from "../ref/ref.ts";
-import type { Auditable, Described, HasNoteRefs, Identifiable, Named } from "../shared/interfaces.ts";
 
-export type SourceBaseSpec =
-  & Identifiable
-  & Partial<Named & Described & Auditable>
-  & HasNoteRefs
-  & {
-    variableValues: Set<VariableValueJson>;
-  };
-
-export abstract class SourceBase
-  implements Identifiable, Partial<Named>, Partial<Described>, Partial<Auditable>, HasNoteRefs {
+export type SourceBaseSpec = {
+  guid: GuidString;
   name?: string;
   description?: string;
-  creatingUser?: string;
+  creatingUser?: GuidString;
   creationDateTime?: Date;
-  modifyingUser?: string;
+  modifyingUser?: GuidString;
+  modifiedDateTime?: Date;
+  noteRefs?: Set<Ref>;
+  variableValues?: Set<VariableValue>;
+  codings?: Set<Coding>;
+};
+
+export abstract class SourceBase {
+  // #### ATTRIBUTES ####
+
+  /** <xsd:attribute name="guid" type="GUIDType" use="required"/> */
+  readonly guid: GuidString;
+  /** <xsd:attribute name="name" type="xsd:string"/> */
+  name?: string;
+  /** <xsd:attribute name="creatingUser" type="GUIDType"/> */
+  creatingUser?: GuidString;
+  /** <xsd:attribute name="creationDateTime" type="xsd:dateTime"/> */
+  creationDateTime?: Date;
+  /** <xsd:attribute name="modifyingUser" type="GUIDType"/> */
+  modifyingUser?: GuidString;
+  /** <xsd:attribute name="modifiedDateTime" type="xsd:dateTime"/> */
   modifiedDateTime?: Date;
 
-  readonly guid: GuidString;
+  // #### ELEMENTS ####
+
+  /** <xsd:element name="Description" type="xsd:string" minOccurs="0"/> */
+  description?: string;
+  /** <xsd:element name="NoteRef" type="NoteRefType" minOccurs="0" maxOccurs="unbounded"/> */
   readonly noteRefs: Set<Ref>;
-  readonly variableValues: Set<VariableValueJson>;
+  /** <xsd:element name="VariableValue" type="VariableValueType" minOccurs="0" maxOccurs="unbounded"/> */
+  readonly variableValues: Set<VariableValue>;
+  /** <xsd:element name="Coding" type="CodingType" minOccurs="0" maxOccurs="unbounded"/> */
+  readonly codings: Set<Coding>;
 
   protected constructor(spec: SourceBaseSpec) {
     this.guid = spec.guid;
     this.name = spec.name;
-    this.description = spec.description;
     this.creatingUser = spec.creatingUser;
     this.creationDateTime = spec.creationDateTime;
     this.modifyingUser = spec.modifyingUser;
     this.modifiedDateTime = spec.modifiedDateTime;
-    this.noteRefs = spec.noteRefs;
-    this.variableValues = spec.variableValues;
+
+    this.description = spec.description;
+    this.noteRefs = spec.noteRefs ?? new Set();
+    this.variableValues = spec.variableValues ?? new Set();
+    this.codings = spec.codings ?? new Set();
   }
 }

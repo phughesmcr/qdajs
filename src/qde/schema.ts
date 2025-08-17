@@ -156,12 +156,18 @@ export const baseSourceSchema = baseEntity.extend({
   VariableValue: z.array(z.lazy(() => variableValueSchema)).optional(),
 });
 
-export const textSourceSchema = baseSourceSchema.extend({
-  richTextPath: z.string().optional(),
-  plainTextPath: z.string().optional(),
-  PlainTextContent: z.string().optional(),
-  PlainTextSelection: z.array(plainTextSelectionSchema).optional(),
-});
+export const textSourceSchema = baseSourceSchema
+  .extend({
+    richTextPath: z.string().optional(),
+    plainTextPath: z.string().optional(),
+    PlainTextContent: z.string().optional(),
+    PlainTextSelection: z.array(plainTextSelectionSchema).optional(),
+  })
+  .refine((data) => {
+    const hasContent = data["PlainTextContent"] !== undefined;
+    const hasPath = data["plainTextPath"] !== undefined;
+    return (hasContent || hasPath) && !(hasContent && hasPath);
+  }, { message: "Exactly one of PlainTextContent or plainTextPath must be present" });
 
 const coordinatesSchema: {
   firstX: z.ZodNumber;
@@ -208,13 +214,19 @@ export const transcriptSelectionSchema: z.ZodObject<Record<string, z.ZodTypeAny>
   toSyncPoint: optionalGuidField,
 });
 
-export const transcriptSchema: z.ZodObject<Record<string, z.ZodTypeAny>> = baseEntity.extend({
-  richTextPath: z.string().optional(),
-  plainTextPath: z.string().optional(),
-  PlainTextContent: z.string().optional(),
-  SyncPoint: z.array(syncPointSchema).optional(),
-  TranscriptSelection: z.array(transcriptSelectionSchema).optional(),
-});
+export const transcriptSchema: z.ZodObject<Record<string, z.ZodTypeAny>> = baseEntity
+  .extend({
+    richTextPath: z.string().optional(),
+    plainTextPath: z.string().optional(),
+    PlainTextContent: z.string().optional(),
+    SyncPoint: z.array(syncPointSchema).optional(),
+    TranscriptSelection: z.array(transcriptSelectionSchema).optional(),
+  })
+  .refine((data) => {
+    const hasContent = data["PlainTextContent"] !== undefined;
+    const hasPath = data["plainTextPath"] !== undefined;
+    return (hasContent || hasPath) && !(hasContent && hasPath);
+  }, { message: "Exactly one of PlainTextContent or plainTextPath must be present" });
 
 export const pictureSourceSchema: z.ZodObject<Record<string, z.ZodTypeAny>> = baseSourceSchema.extend({
   TextDescription: textSourceSchema.optional(),

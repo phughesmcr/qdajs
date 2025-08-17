@@ -1,12 +1,13 @@
 import { linkSchema } from "../../qde/schema.ts";
 import type { GuidString, LinkJson, RGBString } from "../../qde/types.ts";
-import type { LinkDirection } from "../../types.ts";
+import type { Direction } from "../../types.ts";
 import { Ref } from "../ref/ref.ts";
+import { ensureValidGuid, ensureValidRgbColor } from "../shared/utils.ts";
 
 export type LinkSpec = {
   guid: GuidString;
   name?: string;
-  direction?: LinkDirection;
+  direction?: Direction;
   color?: RGBString;
   originGUID?: GuidString;
   targetGUID?: GuidString;
@@ -14,15 +15,31 @@ export type LinkSpec = {
 };
 
 export class Link {
-  name?: string;
-  direction?: LinkDirection;
-  color?: RGBString;
+  // #### ATTRIBUTES ####
 
+  /** <xsd:attribute name="guid" type="GUIDType" use="required"/> */
   readonly guid: GuidString;
+  /** <xsd:attribute name="name" type="xsd:string"/> */
+  name?: string;
+  /** <xsd:attribute name="direction" type="directionType"/> */
+  readonly direction?: Direction;
+  /** <xsd:attribute name="color" type="RGBType"/> */
+  readonly color?: RGBString;
+  /** <xsd:attribute name="originGUID" type="GUIDType"/> */
   readonly originGUID?: GuidString;
+  /** <xsd:attribute name="targetGUID" type="GUIDType"/> */
   readonly targetGUID?: GuidString;
+
+  // #### ELEMENTS ####
+
+  /** <xsd:element name="NoteRef" type="NoteRefType" minOccurs="0" maxOccurs="unbounded"/> */
   readonly noteRefs: Set<Ref>;
 
+  /**
+   * Create a Link from a JSON object.
+   * @param json - The JSON object to create the Link from.
+   * @returns The created Link.
+   */
   static fromJson(json: LinkJson): Link {
     const result = linkSchema.safeParse(json);
     if (!result.success) throw new Error(result.error.message);
@@ -50,6 +67,10 @@ export class Link {
     });
   }
 
+  /**
+   * Create a Link from a specification object.
+   * @param spec - The specification object to create the Link from.
+   */
   constructor(spec: LinkSpec) {
     this.guid = spec.guid;
     this.name = spec.name;
@@ -60,15 +81,25 @@ export class Link {
     this.noteRefs = spec.noteRefs ?? new Set();
   }
 
+  /**
+   * Convert the Link to a JSON object.
+   * @returns The JSON object representing the Link.
+   */
   toJson(): LinkJson {
+    const guid = ensureValidGuid(this.guid, "Link.guid");
+    const color = this.color ? ensureValidRgbColor(this.color) : undefined;
+    const originGUID = this.originGUID ? ensureValidGuid(this.originGUID, "Link.originGUID") : undefined;
+    const targetGUID = this.targetGUID ? ensureValidGuid(this.targetGUID, "Link.targetGUID") : undefined;
+    const noteRefs = [...this.noteRefs].map((ref) => ref.toJson());
+
     return {
-      guid: this.guid,
-      name: this.name,
-      direction: this.direction,
-      color: this.color,
-      originGUID: this.originGUID,
-      targetGUID: this.targetGUID,
-      ...(this.noteRefs.size > 0 ? { NoteRef: [...this.noteRefs].map((ref) => ref.toJson()) } : {}),
+      guid,
+      ...(this.name ? { name: this.name } : {}),
+      ...(this.direction ? { direction: this.direction } : {}),
+      ...(color ? { color } : {}),
+      ...(originGUID ? { originGUID } : {}),
+      ...(targetGUID ? { targetGUID } : {}),
+      ...(noteRefs.length > 0 ? { NoteRef: noteRefs } : {}),
     };
   }
 }

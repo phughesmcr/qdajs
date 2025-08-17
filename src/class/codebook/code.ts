@@ -1,27 +1,45 @@
 import { codeSchema } from "../../qde/schema.ts";
 import type { CodeJson, GuidString, RGBString } from "../../qde/types.ts";
 import { Ref } from "../ref/ref.ts";
+import { ensureValidGuid, ensureValidRgbColor } from "../shared/utils.ts";
 
 export interface CodeSpec {
   guid: GuidString;
   name: string;
   isCodable: boolean;
   color?: RGBString;
+
   description?: string;
   noteRefs?: Set<Ref>;
   children?: Set<Code>;
 }
 
 export class Code {
-  name: string;
-  isCodable: boolean;
-  color?: RGBString;
-  description?: string;
+  // #### ATTRIBUTES ####
 
+  /** <xsd:attribute name="guid" type="GUIDType" use="required"/> */
   readonly guid: GuidString;
-  readonly noteRefs?: Set<Ref>;
-  readonly children?: Set<Code>;
+  /** <xsd:attribute name="name" type="xsd:string" use="required"/> */
+  readonly name: string;
+  /** <xsd:attribute name="isCodable" type="xsd:boolean" use="required"/> */
+  readonly isCodable: boolean;
+  /** <xsd:attribute name="color" type="RGBType"/> */
+  readonly color?: RGBString;
 
+  // #### ELEMENTS ####
+
+  /** <xsd:element name="Description" type="xsd:string" minOccurs="0"/> */
+  description?: string;
+  /** <xsd:element name="NoteRef" type="NoteRefType" minOccurs="0" maxOccurs="unbounded"/> */
+  readonly noteRefs: Set<Ref>;
+  /** <xsd:element name="Code" type="CodeType" minOccurs="0" maxOccurs="unbounded"/> */
+  readonly children: Set<Code>;
+
+  /**
+   * Create a Code from a JSON object.
+   * @param json - The JSON object to create the Code from.
+   * @returns The created Code.
+   */
   static fromJson(json: CodeJson): Code {
     const result = codeSchema.safeParse(json);
     if (!result.success) throw new Error(result.error.message);
@@ -37,27 +55,37 @@ export class Code {
     });
   }
 
+  /**
+   * Create a Code from a specification object.
+   * @param spec - The specification object to create the Code from.
+   */
   constructor(spec: CodeSpec) {
     this.guid = spec.guid;
     this.name = spec.name;
     this.isCodable = spec.isCodable;
     this.color = spec.color;
     this.description = spec.description;
-    this.noteRefs = spec.noteRefs;
-    this.children = spec.children;
+    this.noteRefs = spec.noteRefs ?? new Set();
+    this.children = spec.children ?? new Set();
   }
 
+  /**
+   * Convert the Code to a JSON object.
+   * @returns The JSON object representing the Code.
+   */
   toJson(): CodeJson {
-    const noteRefs = this.noteRefs ? [...this.noteRefs].map((r) => r.toJson()) : [];
-    const children = this.children ? [...this.children].map((c) => c.toJson()) : [];
+    const guid = ensureValidGuid(this.guid, "Code.guid");
+    const color = this.color ? ensureValidRgbColor(this.color) : undefined;
+    const noteRefs = [...this.noteRefs].map((r) => r.toJson());
+    const children = [...this.children].map((c) => c.toJson());
     return {
       _attributes: {
-        guid: this.guid,
+        guid,
         name: this.name,
         isCodable: this.isCodable,
-        color: this.color,
+        ...(color ? { color } : {}),
       },
-      Description: this.description,
+      ...(this.description ? { Description: this.description } : {}),
       ...(noteRefs.length > 0 ? { NoteRef: noteRefs } : {}),
       ...(children.length > 0 ? { Code: children } : {}),
     };

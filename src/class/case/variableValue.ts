@@ -2,60 +2,83 @@ import { variableValueSchema } from "../../qde/schema.ts";
 import type { VariableValueJson } from "../../qde/types.ts";
 import type { VariableType } from "../../types.ts";
 import { Ref } from "../ref/ref.ts";
+import { ensureFiniteNumber, ensureInteger, ensureValidIsoDate, ensureValidIsoDateTime } from "../shared/utils.ts";
 
-export type VariableValueType = string | boolean | number | Date;
+export type TextVariableValue = { type: "Text"; value: string };
+export type BooleanVariableValue = { type: "Boolean"; value: boolean };
+export type IntegerVariableValue = { type: "Integer"; value: number };
+export type FloatVariableValue = { type: "Float"; value: number };
+export type DateVariableValue = { type: "Date"; value: string }; // YYYY-MM-DD
+export type DateTimeVariableValue = { type: "DateTime"; value: string }; // ISO 8601
 
-export type VariableValueSpec<T extends VariableValueType> = {
+export type VariableValueDiscriminated =
+  | TextVariableValue
+  | BooleanVariableValue
+  | IntegerVariableValue
+  | FloatVariableValue
+  | DateVariableValue
+  | DateTimeVariableValue;
+
+export type VariableValueSpec = {
   variableRef: Ref;
-  value: T;
-  type: VariableType;
-};
+} & VariableValueDiscriminated;
 
-export class VariableValue<T extends VariableValueType> {
+export class VariableValue {
+  // #### ELEMENTS ####
+
+  /** <xsd:element name="VariableRef" type="VariableRefType"/> */
   readonly variableRef: Ref;
-  readonly value: T;
+  /** <xsd:element name="TextValue" type="xsd:string" minOccurs="0"/> */
+  readonly value: VariableValueDiscriminated["value"];
+
+  /** @internal */
   readonly type: VariableType;
 
-  static fromJson<T extends VariableValueType>(json: VariableValueJson): VariableValue<T> {
+  /**
+   * Create a VariableValue from a JSON object.
+   * @param json - The JSON object to create the VariableValue from.
+   * @returns The created VariableValue.
+   */
+  static fromJson(json: VariableValueJson): VariableValue {
     const result = variableValueSchema.safeParse(json);
     if (!result.success) throw new Error(result.error.message);
 
     const variableRef = Ref.fromJson(result.data["VariableRef"]);
 
     if (result.data["TextValue"] !== undefined) {
-      return new VariableValue<T>({
+      return new VariableValue({
         variableRef,
-        value: result.data["TextValue"] as T,
+        value: result.data["TextValue"] as string,
         type: "Text",
       });
     } else if (result.data["BooleanValue"] !== undefined) {
-      return new VariableValue<T>({
+      return new VariableValue({
         variableRef,
-        value: result.data["BooleanValue"] as T,
+        value: result.data["BooleanValue"] as boolean,
         type: "Boolean",
       });
     } else if (result.data["IntegerValue"] !== undefined) {
-      return new VariableValue<T>({
+      return new VariableValue({
         variableRef,
-        value: result.data["IntegerValue"] as T,
+        value: result.data["IntegerValue"] as number,
         type: "Integer",
       });
     } else if (result.data["FloatValue"] !== undefined) {
-      return new VariableValue<T>({
+      return new VariableValue({
         variableRef,
-        value: result.data["FloatValue"] as T,
+        value: result.data["FloatValue"] as number,
         type: "Float",
       });
     } else if (result.data["DateValue"] !== undefined) {
-      return new VariableValue<T>({
+      return new VariableValue({
         variableRef,
-        value: result.data["DateValue"] as T,
+        value: result.data["DateValue"] as string,
         type: "Date",
       });
     } else if (result.data["DateTimeValue"] !== undefined) {
-      return new VariableValue<T>({
+      return new VariableValue({
         variableRef,
-        value: result.data["DateTimeValue"] as T,
+        value: result.data["DateTimeValue"] as string,
         type: "DateTime",
       });
     }
@@ -63,31 +86,44 @@ export class VariableValue<T extends VariableValueType> {
     throw new Error("Invalid variable value");
   }
 
-  constructor(spec: VariableValueSpec<T>) {
+  /**
+   * Create a VariableValue from a specification object.
+   * @param spec - The specification object to create the VariableValue from.
+   */
+  constructor(spec: VariableValueSpec) {
     this.variableRef = spec.variableRef;
     this.value = spec.value;
     this.type = spec.type;
   }
 
+  /**
+   * Convert the VariableValue to a JSON object.
+   * @returns The JSON object representing the VariableValue.
+   */
   toJson(): VariableValueJson {
     const variableRefJson = this.variableRef.toJson();
+    const result = { VariableRef: variableRefJson };
     switch (this.type) {
       case "Text":
-        return { VariableRef: variableRefJson, TextValue: this.value as unknown as string };
+        return { ...result, TextValue: String(this.value) };
       case "Boolean":
-        return { VariableRef: variableRefJson, BooleanValue: this.value as unknown as boolean };
+        return { ...result, BooleanValue: !!this.value };
       case "Integer":
-        return { VariableRef: variableRefJson, IntegerValue: this.value as unknown as number };
+        return { ...result, IntegerValue: ensureInteger(this.value as number, "VariableValue.IntegerValue") };
       case "Float":
-        return { VariableRef: variableRefJson, FloatValue: this.value as unknown as number };
-      case "Date":
-        return { VariableRef: variableRefJson, DateValue: this.value as unknown as string };
-      case "DateTime":
-        return { VariableRef: variableRefJson, DateTimeValue: this.value as unknown as string };
+        return { ...result, FloatValue: ensureFiniteNumber(this.value as number, "VariableValue.FloatValue") };
+      case "Date": {
+        const date = ensureValidIsoDate(this.value as string);
+        return { ...result, DateValue: date };
+      }
+      case "DateTime": {
+        const iso = ensureValidIsoDateTime(this.value as string);
+        return { ...result, DateTimeValue: iso };
+      }
       default: {
         // Exhaustive check
-        const neverType: never = this.type;
-        throw new Error(`Unsupported variable value type: ${neverType}`);
+        const neverType: never = this.type as never;
+        throw new Error(`Unsupported variable value type: ${neverType as unknown as string}`);
       }
     }
   }

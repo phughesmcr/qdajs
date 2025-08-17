@@ -1,6 +1,7 @@
 import { edgeSchema } from "../../qde/schema.ts";
 import type { EdgeJson, GuidString, RGBString } from "../../qde/types.ts";
-import type { LineStyle, LinkDirection } from "../../types.ts";
+import type { Direction, LineStyle } from "../../types.ts";
+import { ensureValidGuid, ensureValidRgbColor } from "../shared/utils.ts";
 
 export type EdgeSpec = {
   guid: GuidString;
@@ -9,21 +10,35 @@ export type EdgeSpec = {
   sourceVertex: GuidString;
   targetVertex: GuidString;
   color?: RGBString;
-  direction?: LinkDirection;
+  direction?: Direction;
   lineStyle?: LineStyle;
 };
 
 export class Edge {
-  name?: string;
-  color?: RGBString;
-  direction?: LinkDirection;
-  lineStyle?: LineStyle;
+  // #### ATTRIBUTES ####
 
+  /** <xsd:attribute name="guid" type="GUIDType" use="required"/> */
   readonly guid: GuidString;
+  /** <xsd:attribute name="representedGUID" type="GUIDType"/> */
   readonly representedGUID?: GuidString;
+  /** <xsd:attribute name="name" type="xsd:string"/> */
+  readonly name?: string;
+  /** <xsd:attribute name="sourceVertex" type="GUIDType" use="required"/> */
   readonly sourceVertex: GuidString;
+  /** <xsd:attribute name="targetVertex" type="GUIDType" use="required"/> */
   readonly targetVertex: GuidString;
+  /** <xsd:attribute name="color" type="RGBType"/> */
+  readonly color?: RGBString;
+  /** <xsd:attribute name="direction" type="directionType"/> */
+  readonly direction?: Direction;
+  /** <xsd:attribute name="lineStyle" type="LineStyleType"/> */
+  readonly lineStyle?: LineStyle;
 
+  /**
+   * Create an Edge from a JSON object.
+   * @param json - The JSON object to create the Edge from.
+   * @returns The created Edge.
+   */
   static fromJson(json: EdgeJson): Edge {
     const result = edgeSchema.safeParse(json);
     if (!result.success) throw new Error(result.error.message);
@@ -40,6 +55,10 @@ export class Edge {
     });
   }
 
+  /**
+   * Create an Edge from a specification object.
+   * @param spec - The specification object to create the Edge from.
+   */
   constructor(spec: EdgeSpec) {
     this.guid = spec.guid;
     this.representedGUID = spec.representedGUID;
@@ -51,16 +70,28 @@ export class Edge {
     this.lineStyle = spec.lineStyle;
   }
 
+  /**
+   * Convert the Edge to a JSON object.
+   * @returns The JSON object representing the Edge.
+   */
   toJson(): EdgeJson {
+    const guid = ensureValidGuid(this.guid, "Edge.guid");
+    const representedGUID = this.representedGUID
+      ? ensureValidGuid(this.representedGUID, "Edge.representedGUID")
+      : undefined;
+    const color = this.color ? ensureValidRgbColor(this.color) : undefined;
+    const sourceVertex = ensureValidGuid(this.sourceVertex, "Edge.sourceVertex");
+    const targetVertex = ensureValidGuid(this.targetVertex, "Edge.targetVertex");
+
     return {
-      guid: this.guid,
-      representedGUID: this.representedGUID,
-      name: this.name,
-      sourceVertex: this.sourceVertex,
-      targetVertex: this.targetVertex,
-      color: this.color,
-      direction: this.direction,
-      lineStyle: this.lineStyle,
+      guid,
+      ...(representedGUID ? { representedGUID } : {}),
+      ...(this.name ? { name: this.name } : {}),
+      sourceVertex,
+      targetVertex,
+      ...(color ? { color } : {}),
+      ...(this.direction ? { direction: this.direction } : {}),
+      ...(this.lineStyle ? { lineStyle: this.lineStyle } : {}),
     };
   }
 }

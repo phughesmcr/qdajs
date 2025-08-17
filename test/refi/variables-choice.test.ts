@@ -22,6 +22,7 @@ Deno.test("VariableValue choice: each type and invalid multi-choice", () => {
         {
           guid: "11111111-1111-1111-1111-111111111111",
           name: "src",
+          plainTextPath: "src.txt",
           VariableValue: [
             { VariableRef: { targetGUID: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa" }, TextValue: "hello" },
             { VariableRef: { targetGUID: "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb" }, BooleanValue: true },

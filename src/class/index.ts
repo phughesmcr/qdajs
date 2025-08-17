@@ -1,9 +1,12 @@
+export type * from "./shared/interfaces.ts";
+
 export * from "./case/case.ts";
 export * from "./case/variable.ts";
 export * from "./case/variableValue.ts";
 
 export * from "./codebook/code.ts";
 export * from "./codebook/codebook.ts";
+export * from "./codebook/coding.ts";
 
 export * from "./graph/edge.ts";
 export * from "./graph/graph.ts";
@@ -16,10 +19,9 @@ export * from "./note/note.ts";
 export * from "./ref/ref.ts";
 
 export * from "./selection/index.ts";
+export * from "./selection/sync-point.ts";
 
 export * from "./set/set.ts";
-
-export type * from "./shared/interfaces.ts";
 
 export * from "./source/index.ts";
 

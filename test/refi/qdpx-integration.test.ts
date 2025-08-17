@@ -36,19 +36,36 @@ Deno.test("REFI integration with qdpx pack/unpack", async (t) => {
     const [unpackedOk, unpackedJson] = qde.toJson(projectQde);
     assert(unpackedOk, "Unpacked project.qde should parse to JSON");
 
-    const simplify = (p: ProjectJson) =>
-      JSON.stringify({
-        _attributes: p._attributes,
-        Users: p.Users,
-        CodeBook: { Codes: p.CodeBook?.Codes },
-        Variables: p.Variables,
-        Sources: p.Sources,
-        Sets: p.Sets,
-      });
+    const simplify = (p: ProjectJson) => ({
+      _attributes: p._attributes,
+      Users: p.Users,
+      CodeBook: { Codes: p.CodeBook?.Codes },
+      Variables: p.Variables,
+      Sources: p.Sources,
+      Sets: p.Sets,
+    });
+
+    // Remove all undefined-valued properties recursively so that
+    // optional fields that weren't present don't affect comparison
+    const stripUndefined = (value: unknown): unknown => {
+      if (Array.isArray(value)) {
+        return value.map(stripUndefined);
+      }
+      if (value && typeof value === "object") {
+        const out: Record<string, unknown> = {};
+        for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
+          if (v !== undefined) {
+            out[k] = stripUndefined(v);
+          }
+        }
+        return out;
+      }
+      return value;
+    };
 
     assertEquals(
-      simplify((unpackedJson as { qde: ProjectJson }).qde as ProjectJson),
-      simplify(jsonFromClass),
+      stripUndefined(simplify((unpackedJson as { qde: ProjectJson }).qde as ProjectJson)),
+      stripUndefined(simplify(jsonFromClass)),
       "Unpacked project should match class-derived JSON in core comparable fields",
     );
 

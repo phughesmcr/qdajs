@@ -1,37 +1,64 @@
 import { transcriptSchema } from "../../qde/schema.ts";
-import type { GuidString, SyncPointJson, TranscriptJson, TranscriptSelectionJson } from "../../qde/types.ts";
-import type { HasNoteRefs } from "../index.ts";
+import type { GuidString, TranscriptJson } from "../../qde/types.ts";
 import { Ref } from "../ref/ref.ts";
-import type { Auditable, Described, Identifiable, Named } from "../shared/interfaces.ts";
+import { SyncPoint } from "../selection/sync-point.ts";
+import { TranscriptSelection } from "../selection/transcript-selection.ts";
+import { assertExactlyOne, ensureInteger, ensureValidGuid } from "../shared/utils.ts";
 
-export type TranscriptSpec =
-  & Identifiable
-  & Partial<Named & Described & Auditable>
-  & HasNoteRefs
-  & {
-    syncPoints: Set<SyncPointJson>;
-    selections: Set<TranscriptSelectionJson>;
-    plainTextPath?: string;
-    richTextPath?: string;
-    plainTextContent?: string;
-  };
-
-export class Transcript implements Identifiable, Partial<Named>, Partial<Described> {
+export type TranscriptSpec = {
+  guid: GuidString;
   name?: string;
   description?: string;
-  creatingUser?: string;
+  creatingUser?: GuidString;
   creationDateTime?: Date;
-  modifyingUser?: string;
+  modifyingUser?: GuidString;
+  modifiedDateTime?: Date;
+  noteRefs: Set<Ref>;
+  syncPoints: Set<SyncPoint>;
+  selections: Set<TranscriptSelection>;
+  plainTextPath?: string;
+  richTextPath?: string;
+  plainTextContent?: string;
+};
+
+export class Transcript {
+  // #### ATTRIBUTES ####
+
+  /** <xsd:attribute name="guid" type="GUIDType" use="required"/> */
+  readonly guid: GuidString;
+  /** <xsd:attribute name="name" type="xsd:string"/> */
+  name?: string;
+  /** <xsd:attribute name="plainTextPath" type="xsd:string"/> */
+  readonly plainTextPath?: string;
+  /** <xsd:attribute name="richTextPath" type="xsd:string"/> */
+  readonly richTextPath?: string;
+  /** <xsd:attribute name="creatingUser" type="GUIDType"/> */
+  creatingUser?: GuidString;
+  /** <xsd:attribute name="creationDateTime" type="xsd:dateTime"/> */
+  creationDateTime?: Date;
+  /** <xsd:attribute name="modifyingUser" type="GUIDType"/> */
+  modifyingUser?: GuidString;
+  /** <xsd:attribute name="modifiedDateTime" type="xsd:dateTime"/> */
   modifiedDateTime?: Date;
 
-  readonly guid: GuidString;
-  readonly noteRefs: Set<Ref>;
-  readonly syncPoints: Set<SyncPointJson>;
-  readonly selections: Set<TranscriptSelectionJson>;
-  readonly plainTextPath?: string;
-  readonly richTextPath?: string;
-  readonly plainTextContent?: string;
+  // #### ELEMENTS ####
 
+  /** <xsd:element name="Description" type="xsd:string" minOccurs="0"/> */
+  description?: string;
+  /** <xsd:element name="PlainTextContent" type="xsd:string" minOccurs="0"/> */
+  readonly plainTextContent?: string;
+  /** <xsd:element name="SyncPoint" type="SyncPointType" minOccurs="0" maxOccurs="unbounded"/> */
+  readonly syncPoints: Set<SyncPoint>;
+  /** <xsd:element name="TranscriptSelection" type="TranscriptSelectionType" minOccurs="0" maxOccurs="unbounded"/> */
+  readonly selections: Set<TranscriptSelection>;
+  /** <xsd:element name="NoteRef" type="NoteRefType" minOccurs="0" maxOccurs="unbounded"/> */
+  readonly noteRefs: Set<Ref>;
+
+  /**
+   * Create a Transcript from a JSON object.
+   * @param json - The JSON object to create the Transcript from.
+   * @returns The created Transcript.
+   */
   static fromJson(json: TranscriptJson): Transcript {
     const result = transcriptSchema.safeParse(json);
     if (!result.success) throw new Error(result.error.message);
@@ -45,14 +72,19 @@ export class Transcript implements Identifiable, Partial<Named>, Partial<Describ
       modifyingUser: data.modifyingUser,
       modifiedDateTime: data.modifiedDateTime ? new Date(data.modifiedDateTime) : undefined,
       noteRefs: new Set(data.NoteRef?.map((r) => Ref.fromJson(r)) ?? []),
-      syncPoints: new Set(data.SyncPoint ?? []),
-      selections: new Set(data.TranscriptSelection ?? []),
+      syncPoints: new Set(data.SyncPoint?.map((s) => SyncPoint.fromJson(s)) ?? []),
+      selections: new Set(data.TranscriptSelection?.map((s) => TranscriptSelection.fromJson(s)) ?? []),
       plainTextPath: data.plainTextPath,
       richTextPath: data.richTextPath,
       plainTextContent: data.PlainTextContent,
     });
   }
 
+  /**
+   * Create a Transcript from a specification object.
+   * @param spec - The specification object to create the Transcript from.
+   * @note Either PlainTextContent or plainTextPath MUST be filled, not both.
+   */
   constructor(spec: TranscriptSpec) {
     this.guid = spec.guid;
     this.name = spec.name;
@@ -67,23 +99,48 @@ export class Transcript implements Identifiable, Partial<Named>, Partial<Describ
     this.plainTextPath = spec.plainTextPath;
     this.richTextPath = spec.richTextPath;
     this.plainTextContent = spec.plainTextContent;
+    // Enforce XOR at construction time for robustness
+    assertExactlyOne(
+      { PlainTextContent: this.plainTextContent, plainTextPath: this.plainTextPath },
+      ["PlainTextContent", "plainTextPath"],
+      "Transcript",
+    );
   }
 
+  /**
+   * Convert the Transcript to a JSON object.
+   * @returns The JSON object representing the Transcript.
+   */
   toJson(): TranscriptJson {
-    return {
-      guid: this.guid,
-      name: this.name,
-      Description: this.description,
-      creatingUser: this.creatingUser,
-      creationDateTime: this.creationDateTime?.toISOString(),
-      modifyingUser: this.modifyingUser,
-      modifiedDateTime: this.modifiedDateTime?.toISOString(),
+    const json: TranscriptJson = {
+      guid: ensureValidGuid(this.guid, "Transcript.guid"),
+      ...(this.name ? { name: this.name } : {}),
+      ...(this.description ? { Description: this.description } : {}),
+      ...(this.creatingUser ? { creatingUser: ensureValidGuid(this.creatingUser, "Transcript.creatingUser") } : {}),
+      ...(this.creationDateTime ? { creationDateTime: this.creationDateTime.toISOString() } : {}),
+      ...(this.modifyingUser ? { modifyingUser: ensureValidGuid(this.modifyingUser, "Transcript.modifyingUser") } : {}),
+      ...(this.modifiedDateTime ? { modifiedDateTime: this.modifiedDateTime.toISOString() } : {}),
+      ...(this.plainTextContent ? { PlainTextContent: this.plainTextContent } : {}),
+      ...(this.syncPoints.size > 0
+        ? {
+          SyncPoint: [...this.syncPoints].map((s) => ({
+            guid: ensureValidGuid(s.guid, "SyncPoint.guid"),
+            ...(s.timeStamp !== undefined ? { timeStamp: ensureInteger(s.timeStamp, "SyncPoint.timeStamp") } : {}),
+            ...(s.position !== undefined ? { position: ensureInteger(s.position, "SyncPoint.position") } : {}),
+          })),
+        }
+        : {}),
+      ...(this.selections.size > 0 ? { TranscriptSelection: [...this.selections].map((s) => s.toJson()) } : {}),
       ...(this.noteRefs.size > 0 ? { NoteRef: [...this.noteRefs].map((r) => r.toJson()) } : {}),
-      ...(this.syncPoints.size > 0 ? { SyncPoint: [...this.syncPoints] } : {}),
-      ...(this.selections.size > 0 ? { TranscriptSelection: [...this.selections] } : {}),
-      plainTextPath: this.plainTextPath,
-      richTextPath: this.richTextPath,
-      PlainTextContent: this.plainTextContent,
+      ...(this.plainTextContent === undefined && this.plainTextPath ? { plainTextPath: this.plainTextPath } : {}),
+      ...(this.richTextPath ? { richTextPath: this.richTextPath } : {}),
     };
+    // Re-assert XOR at serialization time to catch post-construction mutations
+    assertExactlyOne(
+      { PlainTextContent: json.PlainTextContent, plainTextPath: json.plainTextPath },
+      ["PlainTextContent", "plainTextPath"],
+      "Transcript",
+    );
+    return json;
   }
 }
