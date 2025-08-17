@@ -29,7 +29,7 @@ if (!jsonOk) throw json;
 console.log(json);
 
 // Convert the project QDE to a Javascript class
-const [projectSuccess, project] = refi.project.fromJson(json);
+const [projectSuccess, project] = refi.Project.fromJson(json);
 if (projectSuccess) {
   console.log("Project:", project);
 }

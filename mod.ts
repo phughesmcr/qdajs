@@ -12,6 +12,12 @@
  * // Convert QDE XML to JSON
  * const [success, result] = qde.toJson(xmlString);
  *
+ * // Convert JSON to a Javascript class
+ * const [projectSuccess, project] = refi.Project.fromJson(jsonData);
+ * if (projectSuccess) {
+ *   console.log("Project:", project);
+ * }
+ *
  * // Convert JSON back to QDE XML
  * const [valid, xml] = qde.fromJson(jsonData);
  *
@@ -42,7 +48,7 @@ import type { Result } from "./src/types.ts";
  * }
  *
  * // Convert QDE JSON to a Javascript class
- * const [projectSuccess, project] = refi.project.fromJson(jsonData);
+ * const [projectSuccess, project] = refi.Project.fromJson(jsonData);
  * if (projectSuccess) {
  *   console.log("Project:", project);
  * }
@@ -121,7 +127,7 @@ export const qdpx = {
  * @example
  * ```typescript
  * // Convert JSON to a Javascript class
- * const [projectSuccess, project] = refi.project.fromJson(jsonData);
+ * const [projectSuccess, project] = refi.Project.fromJson(jsonData);
  * if (projectSuccess) {
  *   console.log("Project:", project);
  * }
