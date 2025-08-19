@@ -63,27 +63,24 @@ Deno.test("Schema XOR: Transcript must have exactly one of PlainTextContent or p
   assert(!validBoth, "Validation should fail when both transcript fields are present");
 });
 
-Deno.test("Constructor XOR: TextSource and Transcript constructors assert exactly-one", () => {
+Deno.test("Constructor XOR: TextSource and Transcript fromJson assert exactly-one", () => {
   const TextSource = (refi as any).TextSource as typeof import("../../src/class/source/text-source.ts").TextSource;
   const Transcript = (refi as any).Transcript as typeof import("../../src/class/source/transcript.ts").Transcript;
-  // TextSource constructor with both present should throw
+  // TextSource fromJson with both present should throw
   assertThrows(() =>
-    new TextSource({
-      guid: "00000000-0000-0000-0000-0000000000c1",
-      name: "t",
-      plainTextPath: "a.txt",
-      plainTextContent: "content",
-    } as any)
+    TextSource.fromJson({
+      _attributes: { guid: "00000000-0000-0000-0000-0000000000c1", name: "t", plainTextPath: "a.txt" },
+      PlainTextContent: "content",
+    } as unknown as any)
   );
-  // Transcript constructor with neither present should throw
+  // Transcript fromJson with neither present should throw
   assertThrows(() =>
-    new Transcript({
-      guid: "00000000-0000-0000-0000-0000000000c2",
-      name: "tr",
-      noteRefs: new Set(),
-      syncPoints: new Set(),
-      selections: new Set(),
-    } as any)
+    Transcript.fromJson({
+      _attributes: { guid: "00000000-0000-0000-0000-0000000000c2", name: "tr" },
+      NoteRef: [],
+      SyncPoint: [],
+      TranscriptSelection: [],
+    } as unknown as any)
   );
 });
 

@@ -214,8 +214,8 @@ Deno.test("End-to-End QDPX Processing", async (t) => {
       console.log(`✓ Read ${sourceFiles.length} source files from disk`);
 
       // Step 6: Repack with the converted QDE and original source files
-      const repackedBlob = await qdpx.pack(qdeJsonResult.qde, sourceFiles);
-      assertExists(repackedBlob, "Should successfully repack QDPX");
+      const [packOk, repackedBlob] = await qdpx.pack(qdeJsonResult.qde, sourceFiles);
+      assert(packOk, `Failed to repack QDPX: ${repackedBlob}`);
       assert(repackedBlob instanceof Blob, "Repacked result should be a Blob");
       assert(repackedBlob.size > 0, "Repacked QDPX should have content");
 
@@ -298,7 +298,8 @@ Deno.test("End-to-End QDPX Processing", async (t) => {
     ];
 
     // Pack with mixed file types
-    const mixedQdpx = await qdpx.pack(qdeJson.qde, testFiles);
+    const [packOk, mixedQdpx] = await qdpx.pack(qdeJson.qde, testFiles);
+    assert(packOk, "Should pack mixed file type QDPX");
 
     // Unpack the mixed QDPX
     const [mixedUnpackOk, mixedUnpacker] = await qdpx.unpack(mixedQdpx);
@@ -349,10 +350,11 @@ Deno.test("End-to-End QDPX Processing", async (t) => {
     }
 
     // Repack with converted QDE
-    const finalQdpx = await qdpx.pack(jsonResult.qde, extractedFiles);
+    const [finalPackOk, finalQdpx] = await qdpx.pack(jsonResult.qde, extractedFiles);
+    assert(finalPackOk, "Should pack final QDPX");
 
     // Final verification
-    const [finalUnpackOk, finalUnpacker] = await qdpx.unpack(finalQdpx);
+    const [finalUnpackOk, finalUnpacker] = await qdpx.unpack(finalQdpx as Blob);
     assert(finalUnpackOk, "Should unpack final QDPX");
 
     assertEquals(

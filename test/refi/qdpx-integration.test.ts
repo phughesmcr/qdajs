@@ -21,9 +21,10 @@ Deno.test("REFI integration with qdpx pack/unpack", async (t) => {
     const jsonFromClass: ProjectJson = project.toJson();
 
     // Ensure we can pack with qdpx using class-derived JSON
-    const blob = await qdpx.pack(jsonFromClass, [
+    const [packOk, blob] = await qdpx.pack(jsonFromClass, [
       { path: "note.txt", content: "Hello REFI", mimeType: "text/plain" },
     ]);
+    assert(packOk, "Pack should succeed");
     assertExists(blob, "Pack should return a Blob");
 
     // Unpack and verify project.qde is readable

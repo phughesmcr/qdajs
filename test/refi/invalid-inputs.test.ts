@@ -21,9 +21,10 @@ Deno.test("QDPX path rules: nested path should be rejected", async () => {
   const proj = { _attributes: { name: "Paths" } };
   let failed = false;
   try {
-    await qdpx.pack(proj, [
+    const [ok, _] = await qdpx.pack(proj, [
       { path: "nested/file.txt", content: "x", mimeType: "text/plain" },
     ]);
+    failed = !ok;
   } catch {
     failed = true;
   }
