@@ -3,6 +3,7 @@ node_modules/
 docs/
 !docs/schema.xsd
 example/
+qdajs.min.js
 
 .env
 .env.*

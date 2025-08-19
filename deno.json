@@ -61,6 +61,10 @@
     "bench": {
       "description": "Run benchmarks",
       "command": "deno bench -A"
+    },
+    "bundle": {
+      "description": "Bundle the codebase",
+      "command": "deno bundle --minify --packages=external --external='@xmldom/xmldom' --external='@zip-js/zip-js' --external='zod' --platform=browser -o=qdajs.min.js mod.ts"
     }
   },
   "test": {
