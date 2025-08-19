@@ -2,7 +2,7 @@ import { audioSelectionJsonSchema } from "../../qde/schema.ts";
 import type { AudioSelectionJson } from "../../qde/types.ts";
 import { Coding } from "../codebook/coding.ts";
 import { Ref } from "../ref/ref.ts";
-import { ensureInteger, ensureValidGuid } from "../shared/utils.ts";
+import { ensureInteger, ensureValidGuid } from "../../utils.ts";
 import { SelectionBase, type SelectionBaseSpec } from "./selection-base.ts";
 
 export type AudioSelectionSpec = SelectionBaseSpec & {

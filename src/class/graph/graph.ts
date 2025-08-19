@@ -1,6 +1,6 @@
 import { graphJsonSchema } from "../../qde/schema.ts";
 import type { GraphJson, GuidString } from "../../qde/types.ts";
-import { ensureValidGuid } from "../shared/utils.ts";
+import { ensureValidGuid } from "../../utils.ts";
 import { Edge } from "./edge.ts";
 import { Vertex } from "./vertex.ts";
 

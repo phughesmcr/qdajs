@@ -1,7 +1,7 @@
 import { caseJsonSchema } from "../../qde/schema.ts";
 import type { CaseJson, GuidString } from "../../qde/types.ts";
+import { ensureValidGuid } from "../../utils.ts";
 import { Ref } from "../ref/ref.ts";
-import { ensureValidGuid } from "../shared/utils.ts";
 import { VariableValue as VariableValueClass } from "./variableValue.ts";
 
 export type CaseSpec = {

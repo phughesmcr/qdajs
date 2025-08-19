@@ -1,7 +1,7 @@
 import { codingJsonSchema } from "../../qde/schema.ts";
 import type { CodingJson, GuidString } from "../../qde/types.ts";
+import { ensureValidGuid } from "../../utils.ts";
 import { Ref } from "../ref/ref.ts";
-import { ensureValidGuid } from "../shared/utils.ts";
 
 export type CodingSpec = {
   guid: GuidString;

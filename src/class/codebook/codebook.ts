@@ -1,7 +1,7 @@
 import { codebookJsonSchema } from "../../qde/schema.ts";
 import type { CodebookJson } from "../../qde/types.ts";
+import { stripUndefinedDeep } from "../../utils.ts";
 import type { CodeSet } from "../set/set.ts";
-import { stripUndefinedDeep } from "../shared/utils.ts";
 import { Code } from "./code.ts";
 
 export interface CodebookSpec {

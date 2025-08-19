@@ -1,7 +1,7 @@
 /// <reference lib="deno.ns" />
 
 import { assert, assertEquals, assertExists } from "@std/assert";
-import { qde } from "../mod.ts";
+import { type ProjectJson, qde } from "../mod.ts";
 const { fromJson, toJson } = qde;
 
 const QDE_FILE = "./docs/example.qde";
@@ -279,7 +279,7 @@ Deno.test("QDE Conversion Integration Tests", async (t) => {
     assertExists(invalidXmlError, "Should provide error message");
 
     // Test invalid JSON structure
-    const [invalidJsonOk, invalidJsonError] = fromJson({ qde: "invalid" });
+    const [invalidJsonOk, invalidJsonError] = fromJson({ qde: "invalid" } as unknown as ProjectJson);
     assert(!invalidJsonOk, "Should fail on invalid JSON structure");
     assertExists(invalidJsonError, "Should provide error message");
   });

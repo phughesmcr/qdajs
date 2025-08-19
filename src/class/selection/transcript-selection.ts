@@ -2,7 +2,7 @@ import { transcriptSelectionJsonSchema } from "../../qde/schema.ts";
 import type { GuidString, TranscriptSelectionJson } from "../../qde/types.ts";
 import { Coding } from "../codebook/coding.ts";
 import { Ref } from "../ref/ref.ts";
-import { ensureValidGuid } from "../shared/utils.ts";
+import { ensureValidGuid } from "../../utils.ts";
 import { SelectionBase, type SelectionBaseSpec } from "./selection-base.ts";
 
 type TranscriptSelectionSpec = SelectionBaseSpec & {

@@ -39,7 +39,8 @@
   "lint": {
     "include": ["src/**/*.ts", "mod.ts"],
     "rules": {
-      "tags": ["recommended", "jsr"]
+      "tags": ["recommended", "jsr"],
+      "exclude": ["no-slow-types"]
     }
   },
   "imports": {

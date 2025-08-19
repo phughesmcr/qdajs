@@ -1,6 +1,6 @@
 import { userJsonSchema } from "../../qde/schema.ts";
 import type { GuidString, UserJson } from "../../qde/types.ts";
-import { ensureValidGuid } from "../shared/utils.ts";
+import { ensureValidGuid } from "../../utils.ts";
 
 export type UserSpec = {
   guid: GuidString;

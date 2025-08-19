@@ -3,7 +3,7 @@ import type { GuidString, TranscriptJson } from "../../qde/types.ts";
 import { Ref } from "../ref/ref.ts";
 import { SyncPoint } from "../selection/sync-point.ts";
 import { TranscriptSelection } from "../selection/transcript-selection.ts";
-import { assertExactlyOne, ensureInteger, ensureValidGuid } from "../shared/utils.ts";
+import { assertExactlyOne, ensureInteger, ensureValidGuid } from "../../utils.ts";
 
 export type TranscriptSpec = {
   guid: GuidString;

@@ -9,7 +9,16 @@
  */
 
 import type { ZodError } from "zod";
-import type { Direction, LineStyle, Result, Shape, VariableType } from "../types.ts";
+import type { DIRECTIONS, LINE_STYLES, SHAPES, VARIABLE_TYPES } from "../constants.ts";
+import type { Result } from "../types.ts";
+
+export type Shape = (typeof SHAPES)[number];
+
+export type Direction = (typeof DIRECTIONS)[number];
+
+export type VariableType = (typeof VARIABLE_TYPES)[number];
+
+export type LineStyle = (typeof LINE_STYLES)[number];
 
 export type GuidString = string;
 

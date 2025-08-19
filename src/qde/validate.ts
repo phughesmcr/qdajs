@@ -14,12 +14,8 @@
 import type { ZodError } from "zod";
 
 import type { Result } from "../types.ts";
-import type { ProjectJson } from "./types.ts";
 import { projectJsonSchema } from "./schema.ts";
-
-const ERROR_INVALID_PROJECT = "Invalid QDE project: root element must be an object";
-const ERROR_MISSING_NAME = "Invalid QDE project: missing Project element or name attribute";
-const ERROR_SCHEMA_FAILED = "Schema validation failed";
+import type { ProjectJson } from "./types.ts";
 
 /**
  * Validate JSON data against QDE project schema
@@ -36,7 +32,8 @@ const ERROR_SCHEMA_FAILED = "Schema validation failed";
  * const projectData = {
  *   _attributes: { name: "My Project" },
  *   Sources: [],
- *   CodeBook: []
+ *   CodeBook: [],
+ *   ...
  * };
  *
  * const [valid, result] = validateQdeJson(projectData);
@@ -49,23 +46,13 @@ const ERROR_SCHEMA_FAILED = "Schema validation failed";
  */
 export function validateQdeJson(json: unknown): Result<{ qde: ProjectJson }, Error | ZodError> {
   if (typeof json !== "object" || json === null || Array.isArray(json)) {
-    return [false, new Error(ERROR_INVALID_PROJECT)];
+    return [false, new Error("Invalid QDE project: root element must be an object")];
   }
-
-  const project = json as Record<string, unknown>;
-  const attrs = project["_attributes"] as Record<string, unknown>;
-  if (attrs && !("name" in attrs)) {
-    return [
-      false,
-      new Error(ERROR_MISSING_NAME),
-    ];
-  }
-
-  const validationResult = projectJsonSchema.safeParse(project);
+  const validationResult = projectJsonSchema.safeParse(json);
   if (!validationResult.success) {
     return [
       false,
-      new Error(ERROR_SCHEMA_FAILED, { cause: validationResult.error }),
+      new Error("Schema validation failed", { cause: validationResult.error }),
     ];
   }
   return [true, { qde: validationResult.data as ProjectJson }];

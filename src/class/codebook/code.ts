@@ -1,7 +1,7 @@
 import { codeJsonSchema } from "../../qde/schema.ts";
 import type { CodeJson, GuidString, RGBString } from "../../qde/types.ts";
+import { ensureValidGuid, ensureValidRgbColor } from "../../utils.ts";
 import { Ref } from "../ref/ref.ts";
-import { ensureValidGuid, ensureValidRgbColor } from "../shared/utils.ts";
 
 export interface CodeSpec {
   guid: GuidString;

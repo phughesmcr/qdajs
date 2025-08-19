@@ -1,7 +1,6 @@
 import { edgeJsonSchema } from "../../qde/schema.ts";
-import type { EdgeJson, GuidString, RGBString } from "../../qde/types.ts";
-import type { Direction, LineStyle } from "../../types.ts";
-import { ensureValidGuid, ensureValidRgbColor } from "../shared/utils.ts";
+import type { Direction, EdgeJson, GuidString, LineStyle, RGBString } from "../../qde/types.ts";
+import { ensureValidGuid, ensureValidRgbColor } from "../../utils.ts";
 
 export type EdgeSpec = {
   guid: GuidString;

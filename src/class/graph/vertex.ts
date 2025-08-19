@@ -1,7 +1,6 @@
 import { vertexJsonSchema } from "../../qde/schema.ts";
-import type { GuidString, RGBString, VertexJson } from "../../qde/types.ts";
-import type { Shape } from "../../types.ts";
-import { ensureInteger, ensureValidGuid, ensureValidRgbColor } from "../shared/utils.ts";
+import type { GuidString, RGBString, Shape, VertexJson } from "../../qde/types.ts";
+import { ensureInteger, ensureValidGuid, ensureValidRgbColor } from "../../utils.ts";
 
 export type VertexSpec = {
   guid: GuidString;

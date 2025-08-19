@@ -6,14 +6,14 @@
  */
 
 import { jsonToQde } from "../src/qde/jsonToXml.ts";
-import type { JsonObject } from "../src/types.ts";
+import type { ProjectJson } from "../src/qde/types.ts";
 
 // Load test data
 const fullJsonData = JSON.parse(await Deno.readTextFile("docs/example.json"));
-const fullQdeData = fullJsonData.qde as JsonObject;
+const fullQdeData = fullJsonData.qde as Record<string, unknown>;
 
 // Create test data of different sizes and structures
-const smallJsonData: JsonObject = {
+const smallJsonData: Record<string, unknown> = {
   "_attributes": {
     "name": "Small Test",
     "xmlns": "urn:QDA-XML:project:1.0",
@@ -45,7 +45,7 @@ const codeBookObj = fullQdeData["CodeBook"] as Record<string, unknown> | undefin
 const codesContainer = codeBookObj?.["Codes"] as Record<string, unknown> | undefined;
 const codesArray = codesContainer?.["Code"] as unknown[] | undefined;
 
-const mediumJsonData: JsonObject = {
+const mediumJsonData: Record<string, unknown> = {
   "_attributes": fullQdeData["_attributes"] as Record<string, unknown>,
   "Users": fullQdeData["Users"] as Record<string, unknown>,
   "CodeBook": {
@@ -56,7 +56,7 @@ const mediumJsonData: JsonObject = {
 };
 
 // Test data with various structural patterns
-const attributeHeavyData: JsonObject = {
+const attributeHeavyData: Record<string, unknown> = {
   "_attributes": {
     "name": "Attribute Heavy",
     "origin": "Test",
@@ -71,7 +71,7 @@ const attributeHeavyData: JsonObject = {
   },
 };
 
-const textHeavyData: JsonObject = {
+const textHeavyData: Record<string, unknown> = {
   "_attributes": {
     "name": "Text Heavy",
     "xmlns": "urn:QDA-XML:project:1.0",
@@ -90,7 +90,7 @@ const textHeavyData: JsonObject = {
   },
 };
 
-const deeplyNestedData: JsonObject = {
+const deeplyNestedData: Record<string, unknown> = {
   "_attributes": {
     "name": "Deeply Nested",
     "xmlns": "urn:QDA-XML:project:1.0",
@@ -138,7 +138,7 @@ const deeplyNestedData: JsonObject = {
 };
 
 // Array-heavy data for testing array processing performance
-const arrayHeavyData: JsonObject = {
+const arrayHeavyData: Record<string, unknown> = {
   "_attributes": {
     "name": "Array Heavy",
     "xmlns": "urn:QDA-XML:project:1.0",
@@ -163,7 +163,7 @@ const arrayHeavyData: JsonObject = {
 };
 
 // Mixed content data (elements with both text and child elements)
-const mixedContentData: JsonObject = {
+const mixedContentData: Record<string, unknown> = {
   "_attributes": {
     "name": "Mixed Content",
     "xmlns": "urn:QDA-XML:project:1.0",
@@ -192,76 +192,76 @@ const mixedContentData: JsonObject = {
 
 // Benchmark: Small JSON to XML conversion
 Deno.bench("JSON to XML - Small data (< 1KB)", () => {
-  const result = jsonToQde(smallJsonData);
+  const result = jsonToQde(smallJsonData as unknown as ProjectJson);
   if (!result[0]) throw result[1];
 });
 
 // Benchmark: Medium JSON to XML conversion
 Deno.bench("JSON to XML - Medium data (~50KB)", () => {
-  const result = jsonToQde(mediumJsonData);
+  const result = jsonToQde(mediumJsonData as unknown as ProjectJson);
   if (!result[0]) throw result[1];
 });
 
 // Benchmark: Full JSON to XML conversion (primary performance test)
 Deno.bench("JSON to XML - Full data (~1.1MB)", () => {
-  const result = jsonToQde(fullQdeData);
+  const result = jsonToQde(fullQdeData as unknown as ProjectJson);
   if (!result[0]) throw result[1];
 });
 
 // Benchmark: Normalized format (with qde wrapper)
 Deno.bench("JSON to XML - Normalized format", () => {
-  const result = jsonToQde({ qde: fullQdeData });
+  const result = jsonToQde({ qde: fullQdeData as unknown as ProjectJson });
   if (!result[0]) throw result[1];
 });
 
 // Benchmark: Attribute-heavy structure (DOM attribute processing)
 Deno.bench("JSON to XML - Attribute heavy (100 users)", () => {
-  const result = jsonToQde(attributeHeavyData);
+  const result = jsonToQde(attributeHeavyData as unknown as ProjectJson);
   if (!result[0]) throw result[1];
 });
 
 // Benchmark: Text-heavy structure (text node creation)
 Deno.bench("JSON to XML - Text heavy (large descriptions)", () => {
-  const result = jsonToQde(textHeavyData);
+  const result = jsonToQde(textHeavyData as unknown as ProjectJson);
   if (!result[0]) throw result[1];
 });
 
 // Benchmark: Deeply nested structure (DOM tree depth)
 Deno.bench("JSON to XML - Deeply nested (5 levels)", () => {
-  const result = jsonToQde(deeplyNestedData);
+  const result = jsonToQde(deeplyNestedData as unknown as ProjectJson);
   if (!result[0]) throw result[1];
 });
 
 // Benchmark: Array-heavy structure (array processing)
 Deno.bench("JSON to XML - Array heavy (500 users, 200 codes)", () => {
-  const result = jsonToQde(arrayHeavyData);
+  const result = jsonToQde(arrayHeavyData as unknown as ProjectJson);
   if (!result[0]) throw result[1];
 });
 
 // Benchmark: Mixed content structure (text + elements)
 Deno.bench("JSON to XML - Mixed content", () => {
-  const result = jsonToQde(mixedContentData);
+  const result = jsonToQde(mixedContentData as unknown as ProjectJson);
   if (!result[0]) throw result[1];
 });
 
 // Benchmark: DOM implementation reuse (testing singleton efficiency)
 Deno.bench("JSON to XML - DOM reuse (10 small conversions)", () => {
   for (let i = 0; i < 10; i++) {
-    const result = jsonToQde(smallJsonData);
+    const result = jsonToQde(smallJsonData as unknown as ProjectJson);
     if (!result[0]) throw result[1];
   }
 });
 
 // Benchmark: Schema validation overhead
 Deno.bench("JSON to XML - With schema validation", () => {
-  const result = jsonToQde(fullQdeData);
+  const result = jsonToQde(fullQdeData as unknown as ProjectJson);
   if (!result[0]) throw result[1];
 });
 
 // Benchmark: Memory pressure test (multiple large conversions)
 Deno.bench("JSON to XML - Memory pressure (3x full data)", () => {
   for (let i = 0; i < 3; i++) {
-    const result = jsonToQde(fullQdeData);
+    const result = jsonToQde(fullQdeData as unknown as ProjectJson);
     if (!result[0]) throw result[1];
   }
 });
@@ -270,14 +270,14 @@ Deno.bench("JSON to XML - Memory pressure (3x full data)", () => {
 const invalidData = { invalid: true }; // Missing required fields
 
 Deno.bench("JSON to XML - Error handling (invalid data)", () => {
-  const result = jsonToQde(invalidData);
+  const result = jsonToQde(invalidData as unknown as ProjectJson);
   // Expect error, measure error handling performance
   if (result[0]) throw new Error("Expected validation error");
 });
 
 // Benchmark: Serialization performance (DOM to string)
 Deno.bench("JSON to XML - Serialization heavy (wide structure)", () => {
-  const wideData: JsonObject = {
+  const wideData: Record<string, unknown> = {
     "_attributes": {
       "name": "Wide Structure",
       "xmlns": "urn:QDA-XML:project:1.0",
@@ -290,6 +290,6 @@ Deno.bench("JSON to XML - Serialization heavy (wide structure)", () => {
     ),
   };
 
-  const result = jsonToQde(wideData);
+  const result = jsonToQde(wideData as unknown as ProjectJson);
   if (!result[0]) throw result[1];
 });

@@ -3,8 +3,6 @@
  * @module
  */
 
-import type { JsonValue } from "./types.ts";
-
 /** Schema-aware performance optimization sets */
 export const REF_ELEMENTS = new Set([
   "CodeRef",
@@ -165,7 +163,7 @@ export const SELECTION_TYPES = [
 ];
 
 /** Cache for common value conversions */
-export const VALUE_CACHE = new Map<string, JsonValue>([
+export const VALUE_CACHE = new Map<string, unknown>([
   ["true", true],
   ["false", false],
   ["0", 0],

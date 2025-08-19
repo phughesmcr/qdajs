@@ -1,6 +1,6 @@
 import { syncPointJsonSchema } from "../../qde/schema.ts";
 import type { GuidString, SyncPointJson } from "../../qde/types.ts";
-import { ensureInteger, ensureValidGuid } from "../shared/utils.ts";
+import { ensureInteger, ensureValidGuid } from "../../utils.ts";
 
 export type SyncPointSpec = {
   guid: GuidString;

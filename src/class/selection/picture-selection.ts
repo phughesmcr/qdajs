@@ -2,7 +2,7 @@ import { pictureSelectionJsonSchema } from "../../qde/schema.ts";
 import type { PictureSelectionJson } from "../../qde/types.ts";
 import { Coding } from "../codebook/coding.ts";
 import { Ref } from "../ref/ref.ts";
-import { ensureInteger, ensureValidGuid } from "../shared/utils.ts";
+import { ensureInteger, ensureValidGuid } from "../../utils.ts";
 import { SelectionBase, type SelectionBaseSpec } from "./selection-base.ts";
 
 type PictureSelectionSpec = SelectionBaseSpec & {

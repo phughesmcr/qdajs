@@ -5,140 +5,79 @@
  * The library provides bidirectional conversion between QDE XML format and JSON, plus functionality to pack/unpack
  * QDPX archive files containing QDE projects and source files.
  *
- * @example
- * ```typescript
- * import { qde, qdpx } from "./mod.ts";
- *
- * // Convert QDE XML to JSON
- * const [success, result] = qde.toJson(xmlString);
- *
- * // Convert JSON to a Javascript class
- * const [projectSuccess, project] = refi.Project.fromJson(jsonData);
- * if (projectSuccess) {
- *   console.log("Project:", project);
- * }
- *
- * // Convert JSON back to QDE XML
- * const [valid, xml] = qde.fromJson(jsonData);
- *
- * // Unpack QDPX archive
- * const [unpackOk, unpacker] = await qdpx.unpack("project.qdpx");
- * ```
- *
  * @module
  */
 
-import * as REFI from "./src/class/index.ts";
-import { jsonToQde } from "./src/qde/jsonToXml.ts";
-import { validateQdeJson } from "./src/qde/validate.ts";
-import { qdeToJson } from "./src/qde/xmlToJson.ts";
-import { pack, type PackQdpxOptions, type SourceFile, type ValidationResult } from "./src/qdpx/pack.ts";
-import { type QdpxUnpacker, unpack, type UnpackQdpxOptions } from "./src/qdpx/unpack.ts";
-import type { Result } from "./src/types.ts";
+import * as refi from "./src/class/index.ts";
+import * as qde from "./src/qde/index.ts";
+import * as qdpx from "./src/qdpx/index.ts";
 
-/**
- * QDE (Qualitative Data Exchange) module for XML/JSON conversion and validation
- *
- * @example
- * ```typescript
- * // Convert QDE XML to JSON
- * const [jsonSuccess, jsonResult] = qde.toJson(xmlString);
- * if (jsonSuccess) {
- *   console.log("Converted:", jsonResult.qde);
- * }
- *
- * // Convert QDE JSON to a Javascript class
- * const [projectSuccess, project] = refi.Project.fromJson(jsonData);
- * if (projectSuccess) {
- *   console.log("Project:", project);
- * }
- *
- * // Convert JSON to QDE XML
- * const [xmlSuccess, xmlResult] = qde.fromJson(jsonData); // or qde.fromJson(project.toJson());
- * if (xmlSuccess) {
- *   console.log("XML:", xmlResult.qde);
- * }
- *
- * // Validate JSON data
- * const [isValid, error] = qde.validate(jsonData);
- * ```
- */
-export const qde = {
+export {
   /**
-   * Convert QDE XML string to validated JSON object
-   * @param xmlString - QDE XML content to parse
-   * @returns Result tuple: [success, data] or [false, error]
+   * QDE (Qualitative Data Exchange) module for XML/JSON conversion and validation
+   *
+   * @example
+   * ```typescript
+   * // Convert QDE XML to JSON
+   * const [jsonSuccess, jsonResult] = qde.toJson(xmlString);
+   * if (jsonSuccess) console.log("Converted:", jsonResult.qde);
+   *
+   * // Convert JSON to QDE XML
+   * const [xmlSuccess, xmlResult] = qde.fromJson(jsonData);
+   * if (xmlSuccess) console.log("XML:", xmlResult.qde);
+   *
+   * // Validate JSON data
+   * const [isValid, error] = qde.validate(jsonData);
+   * ```
    */
-  toJson: qdeToJson,
-
+  qde,
   /**
-   * Convert JSON object to QDE XML string with validation
-   * @param json - JSON data to convert (normalized or raw format)
-   * @returns Result tuple: [success, {qde: xmlString}] or [false, error]
+   * QDPX (QDA Project Exchange) module for archive operations
+   *
+   * @example
+   * ```typescript
+   * // Unpack QDPX archive
+   * const [unpackSuccess, unpacker] = await qdpx.unpack("project.qdpx");
+   * if (unpackSuccess) {
+   *   // get project QDE XML
+   *   const projectQde = await unpacker.getProjectQde();
+   *   console.log("Project QDE:", projectQde);
+   *
+   *   // get source files
+   *   for await (const source of unpacker.extractAll()) {
+   *     const blob = new Blob([source]);
+   *     // ... save to file
+   *   }
+   *
+   *   // ⚠️ remember to close the unpacker!
+   *   await unpacker.close();
+   * }
+   *
+   * // Pack new QDPX archive
+   * const [packSuccess, packResult] = await qdpx.pack({
+   *   outputPath: "new-project.qdpx",
+   *   projectQde: xmlString,
+   *   sourceFiles: files
+   * });
+   *
+   * // packResult is a Blob
+   * ```
    */
-  fromJson: jsonToQde,
-
+  qdpx,
   /**
-   * Validate JSON data against QDE schema
-   * @param json - JSON data to validate
-   * @returns Result tuple: [valid, data] or [false, error]
+   * Classes for working with QDE data.
+   *
+   * @example
+   * ```typescript
+   * // Convert JSON to a Javascript class
+   * const [projectSuccess, project] = refi.Project.fromJson(jsonData);
+   * if (projectSuccess) console.log("Project:", project);
+   * ```
    */
-  validate: validateQdeJson,
+  refi,
 };
-
-/**
- * QDPX (QDA Project Exchange) module for archive operations
- *
- * @example
- * ```typescript
- * // Unpack QDPX archive
- * const [unpackOk, unpacker] = await qdpx.unpack("project.qdpx");
- * if (unpackOk) {
- *   const projectQde = await unpacker.getProjectQde();
- * }
- *
- * // Pack new QDPX archive
- * const result = await qdpx.pack({
- *   outputPath: "new-project.qdpx",
- *   projectQde: xmlString,
- *   sourceFiles: files
- * });
- * ```
- */
-export const qdpx = {
-  /**
-   * Unpack QDPX archive file and provide access to contents
-   * @param input - File path or Uint8Array of QDPX archive
-   * @param options - Optional unpacking configuration
-   * @returns QdpxUnpacker instance for accessing archive contents
-   */
-  unpack,
-
-  /**
-   * Pack QDE project and source files into QDPX archive
-   * @param options - Packing configuration with project data and files
-   * @returns Result tuple: [success, validation] or [false, error]
-   */
-  pack,
-};
-
-/**
- * Classes for working with QDE data.
- * @example
- * ```typescript
- * // Convert JSON to a Javascript class
- * const [projectSuccess, project] = refi.Project.fromJson(jsonData);
- * if (projectSuccess) {
- *   console.log("Project:", project);
- * }
- * ```
- */
-export const refi = REFI;
-
-/**
- * Default export providing both QDE and QDPX functionality
- */
-export default { qde, qdpx, refi };
 
 export type * from "./src/class/index.ts";
-export type { PackQdpxOptions, QdpxUnpacker, Result, SourceFile, UnpackQdpxOptions, ValidationResult };
+export type * from "./src/qde/index.ts";
+export type * from "./src/qdpx/index.ts";
+export type { Result } from "./src/types.ts";

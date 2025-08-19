@@ -4,7 +4,7 @@ import { VariableValue } from "../case/variableValue.ts";
 import { Coding } from "../codebook/coding.ts";
 import { Ref } from "../ref/ref.ts";
 import { PDFSelection } from "../selection/pdf-selection.ts";
-import { ensureValidGuid } from "../shared/utils.ts";
+import { ensureValidGuid } from "../../utils.ts";
 import { SourceBase, type SourceBaseSpec } from "./source-base.ts";
 import { TextSource } from "./text-source.ts";
 

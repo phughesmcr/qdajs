@@ -1,8 +1,7 @@
 import { variableValueJsonSchema } from "../../qde/schema.ts";
-import type { VariableValueJson } from "../../qde/types.ts";
-import type { VariableType } from "../../types.ts";
+import type { VariableType, VariableValueJson } from "../../qde/types.ts";
+import { ensureFiniteNumber, ensureInteger, ensureValidIsoDate, ensureValidIsoDateTime } from "../../utils.ts";
 import { Ref } from "../ref/ref.ts";
-import { ensureFiniteNumber, ensureInteger, ensureValidIsoDate, ensureValidIsoDateTime } from "../shared/utils.ts";
 
 export type TextVariableValue = { type: "Text"; value: string };
 export type BooleanVariableValue = { type: "Boolean"; value: boolean };

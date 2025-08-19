@@ -8,7 +8,7 @@ import { Link } from "./link/link.ts";
 import { Note } from "./note/note.ts";
 import { Ref } from "./ref/ref.ts";
 import { CodeSet } from "./set/set.ts";
-import { ensureValidGuid, stripUndefinedDeep } from "./shared/utils.ts";
+import { ensureValidGuid, stripUndefinedDeep } from "../utils.ts";
 import { type AnySource, AudioSource, PDFSource, PictureSource, TextSource, VideoSource } from "./source/index.ts";
 import { User } from "./user/user.ts";
 

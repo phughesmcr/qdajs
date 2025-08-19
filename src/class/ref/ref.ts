@@ -1,6 +1,6 @@
 import { refJsonSchema } from "../../qde/schema.ts";
 import type { GuidString, RefJson } from "../../qde/types.ts";
-import { ensureValidGuid } from "../shared/utils.ts";
+import { ensureValidGuid } from "../../utils.ts";
 
 export class Ref {
   // #### ELEMENTS ####

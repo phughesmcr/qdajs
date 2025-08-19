@@ -1,8 +1,7 @@
 import { linkJsonSchema } from "../../qde/schema.ts";
-import type { GuidString, LinkJson, RGBString } from "../../qde/types.ts";
-import type { Direction } from "../../types.ts";
+import type { Direction, GuidString, LinkJson, RGBString } from "../../qde/types.ts";
+import { ensureValidGuid, ensureValidRgbColor } from "../../utils.ts";
 import { Ref } from "../ref/ref.ts";
-import { ensureValidGuid, ensureValidRgbColor } from "../shared/utils.ts";
 
 export type LinkSpec = {
   guid: GuidString;

@@ -1,4 +1,4 @@
-import { GUID_REGEX, ISO_DATE_REGEX, ISO_DATETIME_REGEX, RGB_REGEX } from "../../constants.ts";
+import { GUID_REGEX, ISO_DATE_REGEX, ISO_DATETIME_REGEX, RGB_REGEX } from "./constants.ts";
 
 /** Coerce a value to an array, handling null/undefined gracefully */
 export function coerceArray<T>(value: T | T[] | undefined | null): T[] {
@@ -117,4 +117,13 @@ export function assertExactlyOne(obj: Record<string, unknown>, keys: string[], c
   if (present !== 1) {
     throw new Error(`${context}: exactly one of [${keys.join(", ")}] must be present`);
   }
+}
+
+/**
+ * Return object keys in sorted (ascending) order for deterministic iteration.
+ */
+export function sortedKeys(obj: Record<string, unknown>): string[] {
+  const keys = Object.keys(obj);
+  keys.sort();
+  return keys;
 }

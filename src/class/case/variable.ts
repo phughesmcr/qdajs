@@ -1,7 +1,6 @@
 import { variableJsonSchema } from "../../qde/schema.ts";
-import type { GuidString, VariableJson } from "../../qde/types.ts";
-import type { VariableType } from "../../types.ts";
-import { ensureValidGuid } from "../shared/utils.ts";
+import type { GuidString, VariableJson, VariableType } from "../../qde/types.ts";
+import { ensureValidGuid } from "../../utils.ts";
 
 export type VariableSpec = {
   guid: GuidString;

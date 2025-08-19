@@ -4,7 +4,7 @@ import { VariableValue } from "../case/variableValue.ts";
 import { Coding } from "../codebook/coding.ts";
 import { Ref } from "../ref/ref.ts";
 import { PlainTextSelection } from "../selection/plain-text-selection.ts";
-import { assertExactlyOne, ensureValidGuid } from "../shared/utils.ts";
+import { assertExactlyOne, ensureValidGuid } from "../../utils.ts";
 import { SourceBase, type SourceBaseSpec } from "./source-base.ts";
 
 type TextSourceSpec = SourceBaseSpec & {

@@ -1,7 +1,7 @@
 import { setJsonSchema } from "../../qde/schema.ts";
 import type { GuidString, SetJson } from "../../qde/types.ts";
+import { ensureValidGuid } from "../../utils.ts";
 import { Ref } from "../ref/ref.ts";
-import { ensureValidGuid } from "../shared/utils.ts";
 
 export type SetSpec = {
   guid: GuidString;
