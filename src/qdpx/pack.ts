@@ -23,6 +23,7 @@ import { jsonToQde } from "../qde/jsonToXml.ts";
 import type { ProjectJson } from "../qde/types.ts";
 import { validateQdeJson } from "../qde/validate.ts";
 import { qdeToJson } from "../qde/xmlToJson.ts";
+import type { Result } from "../types.ts";
 
 export type PackQdpxOptions = {
   password?: string;
@@ -221,7 +222,7 @@ function validateProject(qde: unknown): ProjectJson {
   if (typeof qde === "string") {
     const [xmlValid, xmlResult] = qdeToJson(qde);
     if (!xmlValid) {
-      throw new Error(`Failed to convert QDE to XML: ${xmlResult}`);
+      throw new Error(`Failed to parse project.qde: ${xmlResult}`);
     }
     return xmlResult.qde as ProjectJson;
   } else {
@@ -244,7 +245,7 @@ function validateProject(qde: unknown): ProjectJson {
  * @param qde - QDE project data (Project object or XML string)
  * @param sources - Array of source files to include in the archive
  * @param opts - Packing options including validation settings and ZIP parameters
- * @returns Promise resolving to Blob containing the QDPX archive
+ * @returns Promise resolving to Result<Blob> containing the QDPX archive
  *
  * @example
  * ```typescript
@@ -263,10 +264,12 @@ function validateProject(qde: unknown): ProjectJson {
  *   }
  * ];
  *
- * const qdpxBlob = await pack(project, sourceFiles, {
+ * const [qdpxSuccess, qdpxBlob] = await pack(project, sourceFiles, {
  *   validateProjectQde: true,
  *   validateSources: true
  * });
+ *
+ * if (!qdpxSuccess) throw qdpxBlob;
  *
  * // Save to file
  * const url = URL.createObjectURL(qdpxBlob);
@@ -277,41 +280,49 @@ function validateProject(qde: unknown): ProjectJson {
  * ```
  */
 export async function pack(
-  qde: unknown,
+  qde: ProjectJson | { qde: ProjectJson },
   sources: SourceFile[] = [],
   opts: PackQdpxOptions = {},
-): Promise<Blob> {
-  if (!qde) {
-    throw new Error("No project provided");
-  }
-
-  if (opts.validateProjectQde !== false) {
-    qde = validateProject(qde);
-  }
-
-  // if qde is a Project, convert to XML
-  if (typeof qde === "object") {
-    const [xmlValid, xmlResult] = jsonToQde(qde as ProjectJson);
-    if (!xmlValid) {
-      throw new Error(`Failed to convert QDE to XML: ${xmlResult}`);
+): Promise<Result<Blob>> {
+  try {
+    if (!qde) {
+      throw new Error("No project provided");
     }
-    qde = xmlResult.qde;
-  }
 
-  if (opts.validateSources !== false) {
-    for (const source of sources) {
-      const validation = validateSourceFile(source);
-      if (!validation.isValid) {
-        throw new Error(`Invalid source file ${source.path}: ${validation.errors.join(", ")}`);
+    if (opts.validateProjectQde !== false) {
+      qde = validateProject(qde);
+    }
+
+    let qdeXml: string | undefined;
+
+    // if qde is a Project, convert to XML
+    if (typeof qde === "object") {
+      const [xmlValid, xmlResult] = jsonToQde(qde as ProjectJson);
+      if (!xmlValid) {
+        throw new Error(`Failed to parse project.qde: ${xmlResult}`);
+      }
+      qdeXml = xmlResult.qde;
+    }
+
+    if (!qdeXml) {
+      throw new Error("No project.qde provided");
+    }
+
+    if (opts.validateSources !== false) {
+      for (const source of sources) {
+        const validation = validateSourceFile(source);
+        if (!validation.isValid) {
+          throw new Error(`Invalid source file ${source.path}: ${validation.errors.join(", ")}`);
+        }
       }
     }
+
+    const blob = await zip(qdeXml, sources, opts);
+    await terminateWorkers();
+    return [true, blob];
+  } catch (error) {
+    return [false, error as Error];
   }
-
-  const blob = await zip(qde as string, sources, opts);
-
-  await terminateWorkers();
-
-  return blob;
 }
 
 export default pack;

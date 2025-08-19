@@ -25,7 +25,7 @@ import type { ProjectJson } from "./types.ts";
  * provides detailed error information for validation failures.
  *
  * @param json - Unknown JSON data to validate against QDE schema
- * @returns Result tuple: [true, {qde: validatedData}] on success, [false, Error] on validation failure
+ * @returns Result tuple: [true, {qde: validatedData}] on success, [false, Error | ZodError] on validation failure
  *
  * @example
  * ```typescript
@@ -50,10 +50,7 @@ export function validateQdeJson(json: unknown): Result<{ qde: ProjectJson }, Err
   }
   const validationResult = projectJsonSchema.safeParse(json);
   if (!validationResult.success) {
-    return [
-      false,
-      new Error("Schema validation failed", { cause: validationResult.error }),
-    ];
+    return [false, validationResult.error];
   }
   return [true, { qde: validationResult.data as ProjectJson }];
 }

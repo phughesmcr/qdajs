@@ -16,12 +16,6 @@ export const REF_ELEMENTS = new Set([
   "MemberNote",
 ]);
 
-export const TEXT_ELEMENTS = new Set([
-  "Description",
-  "PlainTextContent",
-  "TextValue",
-]);
-
 export const VALUE_CHOICE_ELEMENTS = new Set([
   "TextValue",
   "BooleanValue",
@@ -68,11 +62,6 @@ export const ALWAYS_ARRAYS = new Set([
   "Vertex",
   "Edge",
 ]);
-
-/**
- * Elements that need _attributes object according to the schema
- */
-export const ELEMENTS_WITH_ATTRIBUTES = new Set(["Project", "Code"]);
 
 /**
  * Fields that should be XML elements (not attributes) even when they contain primitive values
@@ -144,23 +133,6 @@ export const ELEMENT_FIELDS = new Set([
   "MemberSource",
   "MemberNote",
 ]);
-
-export const SOURCE_TYPES = [
-  "TextSource",
-  "PictureSource",
-  "PDFSource",
-  "AudioSource",
-  "VideoSource",
-];
-
-export const SELECTION_TYPES = [
-  "PlainTextSelection",
-  "PictureSelection",
-  "PDFSelection",
-  "AudioSelection",
-  "VideoSelection",
-  "TranscriptSelection",
-];
 
 /** Cache for common value conversions */
 export const VALUE_CACHE = new Map<string, unknown>([

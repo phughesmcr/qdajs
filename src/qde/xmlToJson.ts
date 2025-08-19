@@ -92,6 +92,12 @@ function handleChildNodes(element: Element): {
   return { children, hasTextContent, textContent, childElementCount };
 }
 
+// Context-aware array enforcement for specific parent/child pairs
+const contextArrayChildren: Record<string, Set<string>> = {
+  // In schema: Case.CodeRef is an array, while Coding.CodeRef is a single object
+  Case: new Set(["CodeRef"]),
+};
+
 /** Convert XML element to JSON object */
 function elementToJson(element: Element): unknown {
   const { tagName } = element;
@@ -129,11 +135,6 @@ function elementToJson(element: Element): unknown {
   }
 
   // Convert child arrays to single items or arrays based on schema requirements
-  // Context-aware array enforcement for specific parent/child pairs
-  const contextArrayChildren: Record<string, Set<string>> = {
-    // In schema: Case.CodeRef is an array, while Coding.CodeRef is a single object
-    Case: new Set(["CodeRef"]),
-  };
   for (const childTagName of sortedKeys(children)) {
     const childArray = children[childTagName];
     const childCount = childArray?.length ?? 0;

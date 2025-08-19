@@ -58,7 +58,7 @@ async function* extractAll(entries: Entry[]): AsyncGenerator<ArrayBuffer> {
  * project.qde file and source files. Handles ZIP file reading with proper error
  * handling and resource management.
  *
- * @param input - QDPX file as Blob (from file input or fetch)
+ * @param blob - QDPX file as Blob (from file input or fetch)
  * @param opts - Optional unpacking configuration (password, encoding, abort signal)
  * @returns Result tuple: [true, QdpxUnpacker] on success, [false, Error] on failure
  *
@@ -82,9 +82,9 @@ async function* extractAll(entries: Entry[]): AsyncGenerator<ArrayBuffer> {
  * }
  * ```
  */
-export async function unpack(input: Blob, opts: UnpackQdpxOptions = {}): Promise<Result<QdpxUnpacker>> {
+export async function unpack(blob: Blob, opts: UnpackQdpxOptions = {}): Promise<Result<QdpxUnpacker>> {
   try {
-    const zipReader = getZip(input, opts);
+    const zipReader = getZip(blob, opts);
     const entries = await zipReader.getEntries(opts);
     const unpacker: QdpxUnpacker = {
       get entries() {

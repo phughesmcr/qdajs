@@ -27,7 +27,7 @@ export {
    * if (xmlSuccess) console.log("XML:", xmlResult.qde);
    *
    * // Validate JSON data
-   * const [isValid, error] = qde.validate(jsonData);
+   * const [isValid, projectJson] = qde.validate(jsonData);
    * ```
    */
   qde,
@@ -37,7 +37,7 @@ export {
    * @example
    * ```typescript
    * // Unpack QDPX archive
-   * const [unpackSuccess, unpacker] = await qdpx.unpack("project.qdpx");
+   * const [unpackSuccess, unpacker] = await qdpx.unpack(qdpxBlob);
    * if (unpackSuccess) {
    *   // get project QDE XML
    *   const projectQde = await unpacker.getProjectQde();
@@ -70,8 +70,8 @@ export {
    * @example
    * ```typescript
    * // Convert JSON to a Javascript class
-   * const [projectSuccess, project] = refi.Project.fromJson(jsonData);
-   * if (projectSuccess) console.log("Project:", project);
+   * const project = refi.Project.fromJson(jsonData);
+   * console.log("Project:", project);
    * ```
    */
   refi,

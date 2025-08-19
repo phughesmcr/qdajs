@@ -7,14 +7,14 @@ export {
   /**
    * Pack QDE project and source files into QDPX archive
    * @param options - Packing configuration with project data and files
-   * @returns Result tuple: [success, validation] or [false, error]
+   * @returns Result tuple: [success, Blob] or [false, error]
    */
   pack,
   /**
    * Unpack QDPX archive file and provide access to contents
-   * @param input - File path or Uint8Array of QDPX archive
-   * @param options - Optional unpacking configuration
-   * @returns QdpxUnpacker instance for accessing archive contents
+   * @param blob - Blob of QDPX archive
+   * @param options - Optional unpacking configuration for the zip reader
+   * @returns Result tuple: [success, QdpxUnpacker] or [false, error]
    */
   unpack,
 };
