@@ -1,10 +1,10 @@
 import { textSourceJsonSchema } from "../../qde/schema.ts";
 import type { TextSourceJson } from "../../qde/types.ts";
+import { assertExactlyOne, ensureValidGuid } from "../../utils.ts";
 import { VariableValue } from "../case/variableValue.ts";
 import { Coding } from "../codebook/coding.ts";
 import { Ref } from "../ref/ref.ts";
 import { PlainTextSelection } from "../selection/plain-text-selection.ts";
-import { assertExactlyOne, ensureValidGuid } from "../../utils.ts";
 import { SourceBase, type SourceBaseSpec } from "./source-base.ts";
 
 type TextSourceSpec = SourceBaseSpec & {
@@ -48,7 +48,7 @@ export class TextSource extends SourceBase {
       richTextPath?: string;
       plainTextPath?: string;
     };
-    return new TextSource({
+    const obj = {
       guid: attrs.guid,
       name: attrs.name,
       description: data.Description,
@@ -63,7 +63,14 @@ export class TextSource extends SourceBase {
       plainTextPath: attrs.plainTextPath,
       plainTextContent: data.PlainTextContent,
       plainTextSelections: new Set(data.PlainTextSelection?.map((s) => PlainTextSelection.fromJson(s)) ?? []),
-    });
+    };
+    // Enforce XOR at construction time for robustness
+    assertExactlyOne(
+      { PlainTextContent: obj.plainTextContent, plainTextPath: obj.plainTextPath },
+      ["PlainTextContent", "plainTextPath"],
+      "TextSource",
+    );
+    return new TextSource(obj);
   }
 
   /**
@@ -77,12 +84,6 @@ export class TextSource extends SourceBase {
     this.plainTextPath = spec.plainTextPath;
     this.plainTextContent = spec.plainTextContent;
     this.plainTextSelections = spec.plainTextSelections ?? new Set();
-    // Enforce XOR at construction time for robustness
-    assertExactlyOne(
-      { PlainTextContent: this.plainTextContent, plainTextPath: this.plainTextPath },
-      ["PlainTextContent", "plainTextPath"],
-      "TextSource",
-    );
   }
 
   /**

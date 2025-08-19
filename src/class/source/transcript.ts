@@ -1,9 +1,9 @@
 import { transcriptJsonSchema } from "../../qde/schema.ts";
 import type { GuidString, TranscriptJson } from "../../qde/types.ts";
+import { assertExactlyOne, ensureInteger, ensureValidGuid } from "../../utils.ts";
 import { Ref } from "../ref/ref.ts";
 import { SyncPoint } from "../selection/sync-point.ts";
 import { TranscriptSelection } from "../selection/transcript-selection.ts";
-import { assertExactlyOne, ensureInteger, ensureValidGuid } from "../../utils.ts";
 
 export type TranscriptSpec = {
   guid: GuidString;
@@ -73,7 +73,7 @@ export class Transcript {
       plainTextPath?: string;
       richTextPath?: string;
     };
-    return new Transcript({
+    const obj = {
       guid: attrs.guid,
       name: attrs.name,
       description: data.Description,
@@ -87,7 +87,13 @@ export class Transcript {
       plainTextPath: attrs.plainTextPath,
       richTextPath: attrs.richTextPath,
       plainTextContent: data.PlainTextContent,
-    });
+    } as TranscriptSpec;
+    assertExactlyOne(
+      { PlainTextContent: obj.plainTextContent, plainTextPath: obj.plainTextPath },
+      ["PlainTextContent", "plainTextPath"],
+      "Transcript",
+    );
+    return new Transcript(obj);
   }
 
   /**
@@ -109,12 +115,6 @@ export class Transcript {
     this.plainTextPath = spec.plainTextPath;
     this.richTextPath = spec.richTextPath;
     this.plainTextContent = spec.plainTextContent;
-    // Enforce XOR at construction time for robustness
-    assertExactlyOne(
-      { PlainTextContent: this.plainTextContent, plainTextPath: this.plainTextPath },
-      ["PlainTextContent", "plainTextPath"],
-      "Transcript",
-    );
   }
 
   /**
