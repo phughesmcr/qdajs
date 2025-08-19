@@ -1,5 +1,3 @@
-export type * from "./shared/interfaces.ts";
-
 export * from "./case/case.ts";
 export * from "./case/variable.ts";
 export * from "./case/variableValue.ts";

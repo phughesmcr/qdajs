@@ -1,4 +1,4 @@
-import { setSchema } from "../../qde/schema.ts";
+import { setJsonSchema } from "../../qde/schema.ts";
 import type { GuidString, SetJson } from "../../qde/types.ts";
 import { Ref } from "../ref/ref.ts";
 import { ensureValidGuid } from "../shared/utils.ts";
@@ -37,12 +37,13 @@ export class CodeSet {
    * @returns The created CodeSet.
    */
   static fromJson(json: SetJson): CodeSet {
-    const result = setSchema.safeParse(json);
+    const result = setJsonSchema.safeParse(json);
     if (!result.success) throw new Error(result.error.message);
     const data = result.data as unknown as SetJson;
+    const attrs = data._attributes as { guid: GuidString; name: string };
     return new CodeSet({
-      guid: data.guid,
-      name: data.name,
+      guid: attrs.guid,
+      name: attrs.name,
       description: data.Description,
       memberCodes: new Set(data.MemberCode?.map(Ref.fromJson) ?? []),
       memberSources: new Set(data.MemberSource?.map(Ref.fromJson) ?? []),
@@ -61,12 +62,14 @@ export class CodeSet {
 
   toJson(): SetJson {
     return {
-      guid: ensureValidGuid(this.guid, "Set.guid"),
-      name: this.name,
+      _attributes: {
+        guid: ensureValidGuid(this.guid, "Set.guid"),
+        name: this.name,
+      },
       ...(this.description ? { Description: this.description } : {}),
       ...(this.memberCodes.size > 0 ? { MemberCode: [...this.memberCodes].map((r) => r.toJson()) } : {}),
       ...(this.memberSources.size > 0 ? { MemberSource: [...this.memberSources].map((r) => r.toJson()) } : {}),
       ...(this.memberNotes.size > 0 ? { MemberNote: [...this.memberNotes].map((r) => r.toJson()) } : {}),
-    };
+    } as unknown as SetJson;
   }
 }

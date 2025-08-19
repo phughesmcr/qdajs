@@ -5,7 +5,7 @@ import { qde, qdpx } from "../../mod.ts";
 
 Deno.test("Invalid inputs: bad GUID and non-ISO datetime should fail validation", async () => {
   const badGuid = {
-    _attributes: { name: "Bad", creatingUserGUID: "not-a-guid" },
+    _attributes: { name: "Bad", creatingUser: "not-a-guid" },
   };
   const [valid] = qde.validate(badGuid);
   assert(!valid, "Bad GUID must fail validation");

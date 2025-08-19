@@ -1,4 +1,4 @@
-import { codeSchema } from "../../qde/schema.ts";
+import { codeJsonSchema } from "../../qde/schema.ts";
 import type { CodeJson, GuidString, RGBString } from "../../qde/types.ts";
 import { Ref } from "../ref/ref.ts";
 import { ensureValidGuid, ensureValidRgbColor } from "../shared/utils.ts";
@@ -41,12 +41,12 @@ export class Code {
    * @returns The created Code.
    */
   static fromJson(json: CodeJson): Code {
-    const result = codeSchema.safeParse(json);
+    const result = codeJsonSchema.safeParse(json);
     if (!result.success) throw new Error(result.error.message);
     const data = result.data as unknown as CodeJson;
     return new Code({
       guid: data._attributes.guid,
-      name: data._attributes.name,
+      name: data._attributes.name ?? "",
       isCodable: data._attributes.isCodable,
       color: data._attributes.color,
       description: data.Description,

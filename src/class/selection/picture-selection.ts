@@ -1,4 +1,4 @@
-import { pictureSelectionSchema } from "../../qde/schema.ts";
+import { pictureSelectionJsonSchema } from "../../qde/schema.ts";
 import type { PictureSelectionJson } from "../../qde/types.ts";
 import { Coding } from "../codebook/coding.ts";
 import { Ref } from "../ref/ref.ts";
@@ -30,23 +30,35 @@ export class PictureSelection extends SelectionBase {
    * @returns The created PictureSelection.
    */
   static fromJson(json: PictureSelectionJson): PictureSelection {
-    const result = pictureSelectionSchema.safeParse(json);
+    const result = pictureSelectionJsonSchema.safeParse(json);
     if (!result.success) throw new Error(result.error.message);
     const data = result.data as unknown as PictureSelectionJson;
+    const attrs = data._attributes as {
+      guid: string;
+      name?: string;
+      creatingUser?: string;
+      creationDateTime?: string;
+      modifyingUser?: string;
+      modifiedDateTime?: string;
+      firstX: number;
+      firstY: number;
+      secondX: number;
+      secondY: number;
+    };
     return new PictureSelection({
-      guid: data.guid,
-      name: data.name,
+      guid: attrs.guid,
+      name: attrs.name,
       description: data.Description,
-      creatingUser: data.creatingUser,
-      creationDateTime: data.creationDateTime ? new Date(data.creationDateTime) : undefined,
-      modifyingUser: data.modifyingUser,
-      modifiedDateTime: data.modifiedDateTime ? new Date(data.modifiedDateTime) : undefined,
+      creatingUser: attrs.creatingUser,
+      creationDateTime: attrs.creationDateTime ? new Date(attrs.creationDateTime) : undefined,
+      modifyingUser: attrs.modifyingUser,
+      modifiedDateTime: attrs.modifiedDateTime ? new Date(attrs.modifiedDateTime) : undefined,
       noteRefs: new Set(data.NoteRef?.map((r) => Ref.fromJson(r)) ?? []),
       codings: new Set(data.Coding?.map((c) => Coding.fromJson(c)) ?? []),
-      firstX: data.firstX,
-      firstY: data.firstY,
-      secondX: data.secondX,
-      secondY: data.secondY,
+      firstX: attrs.firstX,
+      firstY: attrs.firstY,
+      secondX: attrs.secondX,
+      secondY: attrs.secondY,
     });
   }
 
@@ -68,24 +80,26 @@ export class PictureSelection extends SelectionBase {
    */
   toJson(): PictureSelectionJson {
     const json: PictureSelectionJson = {
-      guid: ensureValidGuid(this.guid, "PictureSelection.guid"),
-      ...(this.name ? { name: this.name } : {}),
+      _attributes: {
+        guid: ensureValidGuid(this.guid, "PictureSelection.guid"),
+        ...(this.name ? { name: this.name } : {}),
+        ...(this.creatingUser
+          ? { creatingUser: ensureValidGuid(this.creatingUser, "PictureSelection.creatingUser") }
+          : {}),
+        ...(this.creationDateTime ? { creationDateTime: this.creationDateTime.toISOString() } : {}),
+        ...(this.modifyingUser
+          ? { modifyingUser: ensureValidGuid(this.modifyingUser, "PictureSelection.modifyingUser") }
+          : {}),
+        ...(this.modifiedDateTime ? { modifiedDateTime: this.modifiedDateTime.toISOString() } : {}),
+        firstX: ensureInteger(this.firstX, "PictureSelection.firstX"),
+        firstY: ensureInteger(this.firstY, "PictureSelection.firstY"),
+        secondX: ensureInteger(this.secondX, "PictureSelection.secondX"),
+        secondY: ensureInteger(this.secondY, "PictureSelection.secondY"),
+      },
       ...(this.description ? { Description: this.description } : {}),
-      ...(this.creatingUser
-        ? { creatingUser: ensureValidGuid(this.creatingUser, "PictureSelection.creatingUser") }
-        : {}),
-      ...(this.creationDateTime ? { creationDateTime: this.creationDateTime.toISOString() } : {}),
-      ...(this.modifyingUser
-        ? { modifyingUser: ensureValidGuid(this.modifyingUser, "PictureSelection.modifyingUser") }
-        : {}),
-      ...(this.modifiedDateTime ? { modifiedDateTime: this.modifiedDateTime.toISOString() } : {}),
       ...(this.noteRefs.size > 0 ? { NoteRef: [...this.noteRefs].map((r) => r.toJson()) } : {}),
       ...(this.codings.size > 0 ? { Coding: [...this.codings].map((c) => c.toJson()) } : {}),
-      firstX: ensureInteger(this.firstX, "PictureSelection.firstX"),
-      firstY: ensureInteger(this.firstY, "PictureSelection.firstY"),
-      secondX: ensureInteger(this.secondX, "PictureSelection.secondX"),
-      secondY: ensureInteger(this.secondY, "PictureSelection.secondY"),
-    };
+    } as unknown as PictureSelectionJson;
     return json;
   }
 }

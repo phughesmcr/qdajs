@@ -9,20 +9,17 @@ Deno.test("Sets membership variants round-trip", () => {
     _attributes: { name: "Sets" },
     Sets: {
       Set: [
-        { guid: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa", name: "Empty" } as unknown as any,
+        { _attributes: { guid: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa", name: "Empty" } } as unknown as any,
         {
-          guid: "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
-          name: "Codes",
+          _attributes: { guid: "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb", name: "Codes" },
           MemberCode: [{ targetGUID: "cccccccc-cccc-cccc-cccc-cccccccccccc" }],
         } as unknown as any,
         {
-          guid: "dddddddd-dddd-dddd-dddd-dddddddddddd",
-          name: "Sources",
+          _attributes: { guid: "dddddddd-dddd-dddd-dddd-dddddddddddd", name: "Sources" },
           MemberSource: [{ targetGUID: "eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee" }],
         } as unknown as any,
         {
-          guid: "ffffffff-ffff-ffff-ffff-ffffffffffff",
-          name: "Notes",
+          _attributes: { guid: "ffffffff-ffff-ffff-ffff-ffffffffffff", name: "Notes" },
           MemberNote: [{ targetGUID: "11111111-1111-1111-1111-111111111111" }],
         } as unknown as ProjectJson["Sets"],
       ] as unknown as any[],

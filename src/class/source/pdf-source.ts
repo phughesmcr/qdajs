@@ -1,4 +1,4 @@
-import { pdfSourceSchema } from "../../qde/schema.ts";
+import { pdfSourceJsonSchema } from "../../qde/schema.ts";
 import type { PDFSourceJson } from "../../qde/types.ts";
 import { VariableValue } from "../case/variableValue.ts";
 import { Coding } from "../codebook/coding.ts";
@@ -36,22 +36,32 @@ export class PDFSource extends SourceBase {
    * @returns The created PDFSource.
    */
   static fromJson(json: PDFSourceJson): PDFSource {
-    const result = pdfSourceSchema.safeParse(json);
+    const result = pdfSourceJsonSchema.safeParse(json);
     if (!result.success) throw new Error(result.error.message);
     const data = result.data as unknown as PDFSourceJson;
+    const attrs = data._attributes as {
+      guid: string;
+      name?: string;
+      creatingUser?: string;
+      creationDateTime?: string;
+      modifyingUser?: string;
+      modifiedDateTime?: string;
+      path?: string;
+      currentPath?: string;
+    };
     return new PDFSource({
-      guid: data.guid,
-      name: data.name,
+      guid: attrs.guid,
+      name: attrs.name,
       description: data.Description,
-      creatingUser: data.creatingUser,
-      creationDateTime: data.creationDateTime ? new Date(data.creationDateTime) : undefined,
-      modifyingUser: data.modifyingUser,
-      modifiedDateTime: data.modifiedDateTime ? new Date(data.modifiedDateTime) : undefined,
+      creatingUser: attrs.creatingUser,
+      creationDateTime: attrs.creationDateTime ? new Date(attrs.creationDateTime) : undefined,
+      modifyingUser: attrs.modifyingUser,
+      modifiedDateTime: attrs.modifiedDateTime ? new Date(attrs.modifiedDateTime) : undefined,
       noteRefs: new Set(data.NoteRef?.map((r) => Ref.fromJson(r)) ?? []),
       variableValues: new Set(data.VariableValue?.map((v) => VariableValue.fromJson(v)) ?? []),
       codings: new Set(data.Coding?.map((c) => Coding.fromJson(c)) ?? []),
-      path: data.path,
-      currentPath: data.currentPath,
+      path: attrs.path,
+      currentPath: attrs.currentPath,
       pdfSelections: new Set(data.PDFSelection?.map((s) => PDFSelection.fromJson(s)) ?? []),
       representation: data.Representation ? TextSource.fromJson(data.Representation) : undefined,
     });
@@ -75,20 +85,24 @@ export class PDFSource extends SourceBase {
    */
   toJson(): PDFSourceJson {
     return {
-      guid: ensureValidGuid(this.guid, "PDFSource.guid"),
-      ...(this.name ? { name: this.name } : {}),
-      ...(this.creatingUser ? { creatingUser: ensureValidGuid(this.creatingUser, "PDFSource.creatingUser") } : {}),
-      ...(this.creationDateTime ? { creationDateTime: this.creationDateTime.toISOString() } : {}),
-      ...(this.modifyingUser ? { modifyingUser: ensureValidGuid(this.modifyingUser, "PDFSource.modifyingUser") } : {}),
-      ...(this.modifiedDateTime ? { modifiedDateTime: this.modifiedDateTime.toISOString() } : {}),
+      _attributes: {
+        guid: ensureValidGuid(this.guid, "PDFSource.guid"),
+        ...(this.name ? { name: this.name } : {}),
+        ...(this.creatingUser ? { creatingUser: ensureValidGuid(this.creatingUser, "PDFSource.creatingUser") } : {}),
+        ...(this.creationDateTime ? { creationDateTime: this.creationDateTime.toISOString() } : {}),
+        ...(this.modifyingUser
+          ? { modifyingUser: ensureValidGuid(this.modifyingUser, "PDFSource.modifyingUser") }
+          : {}),
+        ...(this.modifiedDateTime ? { modifiedDateTime: this.modifiedDateTime.toISOString() } : {}),
+        ...(this.path ? { path: this.path } : {}),
+        ...(this.currentPath ? { currentPath: this.currentPath } : {}),
+      },
       ...(this.description ? { Description: this.description } : {}),
       ...(this.pdfSelections.size > 0 ? { PDFSelection: [...this.pdfSelections].map((s) => s.toJson()) } : {}),
       ...(this.representation ? { Representation: this.representation.toJson() } : {}),
       ...(this.codings.size > 0 ? { Coding: [...this.codings].map((c) => c.toJson()) } : {}),
       ...(this.noteRefs.size > 0 ? { NoteRef: [...this.noteRefs].map((r) => r.toJson()) } : {}),
       ...(this.variableValues.size > 0 ? { VariableValue: [...this.variableValues].map((v) => v.toJson()) } : {}),
-      ...(this.path ? { path: this.path } : {}),
-      ...(this.currentPath ? { currentPath: this.currentPath } : {}),
-    };
+    } as unknown as PDFSourceJson;
   }
 }

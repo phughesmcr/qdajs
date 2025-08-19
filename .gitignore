@@ -2,6 +2,7 @@ build/
 node_modules/
 docs/
 !docs/schema.xsd
+example/
 
 .env
 .env.*

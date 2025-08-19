@@ -1,4 +1,4 @@
-import { refSchema } from "../../qde/schema.ts";
+import { refJsonSchema } from "../../qde/schema.ts";
 import type { GuidString, RefJson } from "../../qde/types.ts";
 import { ensureValidGuid } from "../shared/utils.ts";
 
@@ -14,7 +14,7 @@ export class Ref {
    * @returns The created Ref.
    */
   static fromJson(json: unknown): Ref {
-    const result = refSchema.safeParse(json);
+    const result = refJsonSchema.safeParse(json);
     if (!result.success) throw new Error(result.error.message);
     return new Ref(result.data);
   }

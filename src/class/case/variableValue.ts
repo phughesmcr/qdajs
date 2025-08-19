@@ -1,4 +1,4 @@
-import { variableValueSchema } from "../../qde/schema.ts";
+import { variableValueJsonSchema } from "../../qde/schema.ts";
 import type { VariableValueJson } from "../../qde/types.ts";
 import type { VariableType } from "../../types.ts";
 import { Ref } from "../ref/ref.ts";
@@ -40,7 +40,7 @@ export class VariableValue {
    * @returns The created VariableValue.
    */
   static fromJson(json: VariableValueJson): VariableValue {
-    const result = variableValueSchema.safeParse(json);
+    const result = variableValueJsonSchema.safeParse(json);
     if (!result.success) throw new Error(result.error.message);
 
     const variableRef = Ref.fromJson(result.data["VariableRef"]);

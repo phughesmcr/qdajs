@@ -27,7 +27,6 @@
     "strict": true,
     "verbatimModuleSyntax": true
   },
-  "exclude": ["example/**/*.ts"],
   "fmt": {
     "indentWidth": 2,
     "lineWidth": 120,

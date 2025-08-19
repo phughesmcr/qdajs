@@ -14,8 +14,8 @@
 import type { ZodError } from "zod";
 
 import type { Result } from "../types.ts";
-import { projectSchema } from "./schema.ts";
 import type { ProjectJson } from "./types.ts";
+import { projectJsonSchema } from "./schema.ts";
 
 const ERROR_INVALID_PROJECT = "Invalid QDE project: root element must be an object";
 const ERROR_MISSING_NAME = "Invalid QDE project: missing Project element or name attribute";
@@ -61,7 +61,7 @@ export function validateQdeJson(json: unknown): Result<{ qde: ProjectJson }, Err
     ];
   }
 
-  const validationResult = projectSchema.safeParse(project);
+  const validationResult = projectJsonSchema.safeParse(project);
   if (!validationResult.success) {
     return [
       false,

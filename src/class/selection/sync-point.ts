@@ -1,4 +1,4 @@
-import { syncPointSchema } from "../../qde/schema.ts";
+import { syncPointJsonSchema } from "../../qde/schema.ts";
 import type { GuidString, SyncPointJson } from "../../qde/types.ts";
 import { ensureInteger, ensureValidGuid } from "../shared/utils.ts";
 
@@ -24,13 +24,14 @@ export class SyncPoint {
    * @returns The created SyncPoint.
    */
   static fromJson(json: SyncPointJson): SyncPoint {
-    const result = syncPointSchema.safeParse(json);
+    const result = syncPointJsonSchema.safeParse(json);
     if (!result.success) throw new Error(result.error.message);
     const data = result.data as unknown as SyncPointJson;
+    const attrs = data._attributes as { guid: GuidString; timeStamp?: number; position?: number };
     return new SyncPoint({
-      guid: data.guid,
-      timeStamp: data.timeStamp,
-      position: data.position,
+      guid: attrs.guid,
+      timeStamp: attrs.timeStamp,
+      position: attrs.position,
     });
   }
 
@@ -50,9 +51,11 @@ export class SyncPoint {
    */
   toJson(): SyncPointJson {
     return {
-      guid: ensureValidGuid(this.guid, "SyncPoint.guid"),
-      ...(this.timeStamp !== undefined ? { timeStamp: ensureInteger(this.timeStamp, "SyncPoint.timeStamp") } : {}),
-      ...(this.position !== undefined ? { position: ensureInteger(this.position, "SyncPoint.position") } : {}),
-    };
+      _attributes: {
+        guid: ensureValidGuid(this.guid, "SyncPoint.guid"),
+        ...(this.timeStamp !== undefined ? { timeStamp: ensureInteger(this.timeStamp, "SyncPoint.timeStamp") } : {}),
+        ...(this.position !== undefined ? { position: ensureInteger(this.position, "SyncPoint.position") } : {}),
+      },
+    } as unknown as SyncPointJson;
   }
 }

@@ -1,4 +1,4 @@
-import { codeBookSchema } from "../../qde/schema.ts";
+import { codebookJsonSchema } from "../../qde/schema.ts";
 import type { CodebookJson } from "../../qde/types.ts";
 import type { CodeSet } from "../set/set.ts";
 import { stripUndefinedDeep } from "../shared/utils.ts";
@@ -26,10 +26,10 @@ export class Codebook {
    * @returns The created Codebook.
    */
   static fromJson(json: CodebookJson): Codebook {
-    const result = codeBookSchema.safeParse(json);
+    const result = codebookJsonSchema.safeParse(json);
     if (!result.success) throw new Error(result.error.message);
     const data = result.data as unknown as CodebookJson;
-    const codes = new Set(data.Codes.Code.map((c) => Code.fromJson(c)));
+    const codes = new Set((data.Codes.Code ?? []).map((c) => Code.fromJson(c)));
     return new Codebook({ codes });
   }
 

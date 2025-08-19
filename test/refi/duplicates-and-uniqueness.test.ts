@@ -9,8 +9,8 @@ Deno.test("Duplicate GUIDs should fail validation", () => {
     _attributes: { name: "Dup" },
     Users: {
       User: [
-        { guid: "00000000-0000-0000-0000-00000000d001", name: "A" },
-        { guid: "00000000-0000-0000-0000-00000000d001", name: "B" },
+        { _attributes: { guid: "00000000-0000-0000-0000-00000000d001", name: "A" } },
+        { _attributes: { guid: "00000000-0000-0000-0000-00000000d001", name: "B" } },
       ],
     },
   } as ProjectJson;

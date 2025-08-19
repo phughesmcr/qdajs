@@ -1,4 +1,4 @@
-import { linkSchema } from "../../qde/schema.ts";
+import { linkJsonSchema } from "../../qde/schema.ts";
 import type { GuidString, LinkJson, RGBString } from "../../qde/types.ts";
 import type { Direction } from "../../types.ts";
 import { Ref } from "../ref/ref.ts";
@@ -41,28 +41,26 @@ export class Link {
    * @returns The created Link.
    */
   static fromJson(json: LinkJson): Link {
-    const result = linkSchema.safeParse(json);
+    const result = linkJsonSchema.safeParse(json);
     if (!result.success) throw new Error(result.error.message);
-
-    const {
-      guid,
-      name,
-      direction,
-      color,
-      originGUID,
-      targetGUID,
-      NoteRef,
-    } = result.data as unknown as LinkJson;
-
-    const noteRefs = new Set(NoteRef?.map((ref) => Ref.fromJson(ref)) ?? []);
+    const data = result.data as unknown as LinkJson;
+    const attrs = data._attributes as {
+      guid: GuidString;
+      name?: string;
+      direction?: Direction;
+      color?: RGBString;
+      originGUID?: GuidString;
+      targetGUID?: GuidString;
+    };
+    const noteRefs = new Set(data.NoteRef?.map((ref) => Ref.fromJson(ref)) ?? []);
 
     return new Link({
-      guid,
-      name,
-      direction,
-      color,
-      originGUID,
-      targetGUID,
+      guid: attrs.guid,
+      name: attrs.name,
+      direction: attrs.direction,
+      color: attrs.color,
+      originGUID: attrs.originGUID,
+      targetGUID: attrs.targetGUID,
       noteRefs,
     });
   }
@@ -93,13 +91,15 @@ export class Link {
     const noteRefs = [...this.noteRefs].map((ref) => ref.toJson());
 
     return {
-      guid,
-      ...(this.name ? { name: this.name } : {}),
-      ...(this.direction ? { direction: this.direction } : {}),
-      ...(color ? { color } : {}),
-      ...(originGUID ? { originGUID } : {}),
-      ...(targetGUID ? { targetGUID } : {}),
+      _attributes: {
+        guid,
+        ...(this.name ? { name: this.name } : {}),
+        ...(this.direction ? { direction: this.direction } : {}),
+        ...(color ? { color } : {}),
+        ...(originGUID ? { originGUID } : {}),
+        ...(targetGUID ? { targetGUID } : {}),
+      },
       ...(noteRefs.length > 0 ? { NoteRef: noteRefs } : {}),
-    };
+    } as unknown as LinkJson;
   }
 }

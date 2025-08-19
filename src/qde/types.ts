@@ -15,71 +15,129 @@ export type GuidString = string;
 
 export type RGBString = string;
 
-export interface RefJson {
-  targetGUID: GuidString;
+export interface WithAttributes<T> {
+  _attributes: T;
 }
 
-export interface CreationMetadataJson {
+export interface AuditCreatorAttributes {
   creatingUser?: GuidString;
   creationDateTime?: string;
+}
+
+export interface AuditModifierAttributes {
   modifyingUser?: GuidString;
   modifiedDateTime?: string;
 }
 
-export interface CommonMetadataJson extends CreationMetadataJson {
-  Description?: string;
-  NoteRef?: RefJson[];
+export interface AuditAttributes extends AuditCreatorAttributes, AuditModifierAttributes {}
+
+export interface Identified {
+  guid: GuidString;
 }
 
-export interface BaseEntityJson extends CommonMetadataJson {
-  guid: GuidString;
+export interface Nameable {
   name?: string;
 }
 
-export interface CodingJson {
-  guid: GuidString;
-  creatingUser?: GuidString;
-  creationDateTime?: string;
-  CodeRef?: RefJson;
-  NoteRef?: RefJson[];
-}
-
-export interface CodeJson {
-  _attributes: {
-    guid: GuidString;
-    name: string;
-    isCodable: boolean;
-    color?: RGBString;
-  };
+export interface Describable {
   Description?: string;
+}
+
+export interface Colorable {
+  color?: RGBString;
+}
+
+export interface RefJson {
+  targetGUID: GuidString;
+}
+
+export interface WithNoteRefs {
   NoteRef?: RefJson[];
-  Code?: CodeJson[];
 }
 
-export interface CodebookJson {
-  Codes: {
-    Code: CodeJson[];
-  };
+export interface ProjectAttributes extends Nameable, AuditAttributes {
+  origin?: string;
+  basePath?: string;
+  xmlns?: string;
+  "xmlns:xsi"?: string;
+  "xsi:schemaLocation"?: string;
 }
 
-export interface UserJson {
-  guid: GuidString;
-  name?: string;
-  id?: string;
+export interface ProjectJson extends WithAttributes<ProjectAttributes>, Describable, WithNoteRefs {
+  Users?: UsersJson;
+  CodeBook?: CodebookJson;
+  Variables?: VariablesJson;
+  Cases?: CasesJson;
+  Sources?: SourcesJson;
+  Notes?: NotesJson;
+  Links?: LinksJson;
+  Sets?: SetsJson;
+  Graphs?: GraphsJson;
 }
 
 export interface UsersJson {
   User: UserJson[];
 }
 
-export interface BaseSelectionJson extends BaseEntityJson {
+export interface CodesJson {
+  Code?: CodeJson[];
+}
+
+export interface CodebookJson {
+  Codes: CodesJson;
+  Sets?: SetsJson;
+  origin?: string;
+}
+
+export interface VariablesJson {
+  Variable?: VariableJson[];
+}
+
+export interface CasesJson {
+  Case?: CaseJson[];
+}
+
+export interface SourcesJson {
+  TextSource?: TextSourceJson[];
+  PictureSource?: PictureSourceJson[];
+  PDFSource?: PDFSourceJson[];
+  AudioSource?: AudioSourceJson[];
+  VideoSource?: VideoSourceJson[];
+}
+
+export interface NotesJson {
+  Note?: TextSourceJson[];
+}
+
+export interface LinksJson {
+  Link?: LinkJson[];
+}
+
+export interface SetsJson {
+  Set?: SetJson[];
+}
+
+export interface GraphsJson {
+  Graph?: GraphJson[];
+}
+
+export interface CodeJson
+  extends WithAttributes<Identified & Nameable & Colorable & { isCodable: boolean }>, Describable, WithNoteRefs {
+  Code?: CodeJson[];
+}
+
+export interface CodingJson extends WithAttributes<Identified & AuditCreatorAttributes>, WithNoteRefs {
+  CodeRef?: RefJson;
+}
+
+export interface UserJson extends WithAttributes<Identified & Nameable & { id?: string }> {}
+
+export interface BaseSelection<T = undefined>
+  extends WithAttributes<AuditAttributes & Identified & Nameable & T>, Describable, WithNoteRefs {
   Coding?: CodingJson[];
 }
 
-export interface PlainTextSelectionJson extends BaseSelectionJson {
-  startPosition: number;
-  endPosition: number;
-}
+export interface PlainTextSelectionJson extends BaseSelection<{ startPosition: number; endPosition: number }> {}
 
 export type VariableValueJson =
   | {
@@ -137,18 +195,41 @@ export type VariableValueJson =
     DateTimeValue: string;
   };
 
-export interface BaseSourceJson extends BaseEntityJson {
-  path?: string;
-  currentPath?: string;
+export interface BaseSourceJson<T = undefined>
+  extends WithAttributes<Identified & Nameable & AuditAttributes & T>, Describable, WithNoteRefs {
   Coding?: CodingJson[];
   VariableValue?: VariableValueJson[];
 }
 
-export interface TextSourceJson extends BaseSourceJson {
-  richTextPath?: string;
-  plainTextPath?: string;
+/** <!-- Either PlainTextContent or plainTextPath MUST be filled, not both --> */
+export interface TextSourceJson extends BaseSourceJson<{ richTextPath?: string; plainTextPath?: string }> {
   PlainTextContent?: string;
   PlainTextSelection?: PlainTextSelectionJson[];
+}
+
+export interface Locatable {
+  path?: string;
+  currentPath?: string;
+}
+
+export interface PictureSourceJson extends BaseSourceJson<Locatable> {
+  TextDescription?: TextSourceJson;
+  PictureSelection?: PictureSelectionJson[];
+}
+
+export interface PDFSourceJson extends BaseSourceJson<Locatable> {
+  PDFSelection?: PDFSelectionJson[];
+  Representation?: TextSourceJson;
+}
+
+export interface AudioSourceJson extends BaseSourceJson<Locatable> {
+  Transcript?: TranscriptJson[];
+  AudioSelection?: AudioSelectionJson[];
+}
+
+export interface VideoSourceJson extends BaseSourceJson<Locatable> {
+  Transcript?: TranscriptJson[];
+  VideoSelection?: VideoSelectionJson[];
 }
 
 export interface Coordinates {
@@ -163,183 +244,84 @@ export interface TimeRange {
   end: number;
 }
 
-export interface PictureSelectionJson extends BaseSelectionJson, Coordinates {}
+export interface PictureSelectionJson extends BaseSelection<Coordinates> {}
 
-export interface PDFSelectionJson extends BaseSelectionJson, Coordinates {
-  page: number;
+export interface PDFSelectionJson extends BaseSelection<Coordinates & { page: number }> {
   Representation?: TextSourceJson;
 }
 
-export interface AudioSelectionJson extends BaseSelectionJson, TimeRange {}
+export interface AudioSelectionJson extends BaseSelection<TimeRange> {}
 
-export interface VideoSelectionJson extends BaseSelectionJson, TimeRange {}
+export interface VideoSelectionJson extends BaseSelection<TimeRange> {}
 
-export interface SyncPointJson {
-  guid: GuidString;
-  timeStamp?: number;
-  position?: number;
-}
+export interface SyncPointJson extends WithAttributes<Identified & { timeStamp?: number; position?: number }> {}
 
-export interface TranscriptSelectionJson extends BaseSelectionJson {
-  fromSyncPoint?: GuidString;
-  toSyncPoint?: GuidString;
-}
+export interface TranscriptSelectionJson
+  extends BaseSelection<{ fromSyncPoint?: GuidString; toSyncPoint?: GuidString }> {}
 
-export interface TranscriptJson extends BaseEntityJson {
-  richTextPath?: string;
-  plainTextPath?: string;
+/** <!-- Either PlainTextContent or plainTextPath MUST be filled, not both --> */
+export interface TranscriptJson extends BaseSourceJson<{ richTextPath?: string; plainTextPath?: string }> {
   PlainTextContent?: string;
   SyncPoint?: SyncPointJson[];
   TranscriptSelection?: TranscriptSelectionJson[];
 }
 
-export interface PictureSourceJson extends BaseSourceJson {
-  TextDescription?: TextSourceJson;
-  PictureSelection?: PictureSelectionJson[];
-}
+export interface VariableJson
+  extends WithAttributes<Identified & Nameable & { typeOfVariable: VariableType }>, Describable {}
 
-export interface PDFSourceJson extends BaseSourceJson {
-  PDFSelection?: PDFSelectionJson[];
-  Representation?: TextSourceJson;
-}
-
-export interface AudioSourceJson extends BaseSourceJson {
-  Transcript?: TranscriptJson[];
-  AudioSelection?: AudioSelectionJson[];
-}
-
-export interface VideoSourceJson extends BaseSourceJson {
-  Transcript?: TranscriptJson[];
-  VideoSelection?: VideoSelectionJson[];
-}
-
-export interface SourcesJson {
-  TextSource?: TextSourceJson[];
-  PictureSource?: PictureSourceJson[];
-  PDFSource?: PDFSourceJson[];
-  AudioSource?: AudioSourceJson[];
-  VideoSource?: VideoSourceJson[];
-}
-
-export interface VariableJson {
-  guid: GuidString;
-  name: string;
-  typeOfVariable: VariableType;
-  Description?: string;
-}
-
-export interface VariablesJson {
-  Variable?: VariableJson[];
-}
-
-export interface CaseJson {
-  guid: GuidString;
-  name?: string;
-  Description?: string;
+export interface CaseJson extends WithAttributes<Identified & Nameable>, Describable {
   CodeRef?: RefJson[];
   VariableValue?: VariableValueJson[];
   SourceRef?: RefJson[];
   SelectionRef?: RefJson[];
 }
 
-export interface CasesJson {
-  Case?: CaseJson[];
-}
-
-export interface SetJson {
-  guid: GuidString;
-  name: string;
-  Description?: string;
+export interface SetJson extends WithAttributes<Identified & Nameable>, Describable {
   MemberCode?: RefJson[];
   MemberSource?: RefJson[];
   MemberNote?: RefJson[];
 }
 
-export interface SetsJson {
-  Set?: SetJson[];
-}
+export interface VertexJson extends
+  WithAttributes<
+    Identified & Nameable & Colorable & {
+      representedGUID?: GuidString;
+      firstX: number;
+      firstY: number;
+      secondX?: number;
+      secondY?: number;
+      shape?: Shape;
+    }
+  > {}
 
-export interface VertexJson {
-  guid: GuidString;
-  representedGUID?: GuidString;
-  name?: string;
-  firstX: number;
-  firstY: number;
-  secondX?: number;
-  secondY?: number;
-  shape?: Shape;
-  color?: RGBString;
-}
+export interface EdgeJson extends
+  WithAttributes<
+    Identified & Nameable & Colorable & {
+      representedGUID?: GuidString;
+      sourceVertex: GuidString;
+      targetVertex: GuidString;
+      direction?: Direction;
+      lineStyle?: LineStyle;
+    }
+  > {}
 
-export interface EdgeJson {
-  guid: GuidString;
-  representedGUID?: GuidString;
-  name?: string;
-  sourceVertex: GuidString;
-  targetVertex: GuidString;
-  color?: RGBString;
-  direction?: Direction;
-  lineStyle?: LineStyle;
-}
-
-export interface GraphJson {
-  guid: GuidString;
-  name?: string;
+export interface GraphJson extends WithAttributes<Identified & Nameable> {
   Vertex?: VertexJson[];
   Edge?: EdgeJson[];
 }
 
-export interface GraphsJson {
-  Graph?: GraphJson[];
-}
-
-export interface LinkJson {
-  guid: GuidString;
-  name?: string;
-  direction?: Direction;
-  color?: RGBString;
-  originGUID?: GuidString;
-  targetGUID?: GuidString;
-  NoteRef?: RefJson[];
-}
-
-export interface LinksJson {
-  Link?: LinkJson[];
-}
-
-export interface NotesJson {
-  Note?: TextSourceJson[];
-}
-
-export interface ProjectMetaJson {
-  name: string;
-  origin?: string;
-  creatingUserGUID?: GuidString;
-  creationDateTime?: string;
-  modifyingUserGUID?: GuidString;
-  modifiedDateTime?: string;
-  basePath?: string;
-  xmlns?: string;
-  "xmlns:xsi"?: string;
-  "xsi:schemaLocation"?: string;
-}
-
-export interface ProjectJson {
-  _attributes: ProjectMetaJson;
-  Users?: UsersJson;
-  CodeBook?: CodebookJson;
-  Variables?: VariablesJson;
-  Cases?: CasesJson;
-  Sources?: SourcesJson;
-  Notes?: NotesJson;
-  Links?: LinksJson;
-  Sets?: SetsJson;
-  Graphs?: GraphsJson;
-  Description?: string;
-  NoteRef?: RefJson[];
-}
+export interface LinkJson extends
+  WithAttributes<
+    Identified & Nameable & Colorable & {
+      direction?: Direction;
+      originGUID?: GuidString;
+      targetGUID?: GuidString;
+    }
+  >,
+  WithNoteRefs {}
 
 export type NoteJson = TextSourceJson;
 
 export type QdeToJsonResult = Result<{ qde: ProjectJson }, Error | ZodError>;
+
 export type JsonToQdeResult = Result<{ qde: string }, Error | ZodError>;

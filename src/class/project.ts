@@ -1,4 +1,4 @@
-import { projectSchema } from "../qde/schema.ts";
+import { projectJsonSchema } from "../qde/schema.ts";
 import type { GuidString, ProjectJson } from "../qde/types.ts";
 import { Case } from "./case/case.ts";
 import { Variable } from "./case/variable.ts";
@@ -99,7 +99,7 @@ export class Project {
    * @returns The created Project.
    */
   static fromJson(json: ProjectJson): Project {
-    const result = projectSchema.safeParse(json);
+    const result = projectJsonSchema.safeParse(json);
     if (!result.success) throw new Error(result.error.message);
 
     const data = result.data as unknown as ProjectJson;

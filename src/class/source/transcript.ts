@@ -1,4 +1,4 @@
-import { transcriptSchema } from "../../qde/schema.ts";
+import { transcriptJsonSchema } from "../../qde/schema.ts";
 import type { GuidString, TranscriptJson } from "../../qde/types.ts";
 import { Ref } from "../ref/ref.ts";
 import { SyncPoint } from "../selection/sync-point.ts";
@@ -60,22 +60,32 @@ export class Transcript {
    * @returns The created Transcript.
    */
   static fromJson(json: TranscriptJson): Transcript {
-    const result = transcriptSchema.safeParse(json);
+    const result = transcriptJsonSchema.safeParse(json);
     if (!result.success) throw new Error(result.error.message);
     const data = result.data as unknown as TranscriptJson;
+    const attrs = data._attributes as {
+      guid: GuidString;
+      name?: string;
+      creatingUser?: GuidString;
+      creationDateTime?: string;
+      modifyingUser?: GuidString;
+      modifiedDateTime?: string;
+      plainTextPath?: string;
+      richTextPath?: string;
+    };
     return new Transcript({
-      guid: data.guid,
-      name: data.name,
+      guid: attrs.guid,
+      name: attrs.name,
       description: data.Description,
-      creatingUser: data.creatingUser,
-      creationDateTime: data.creationDateTime ? new Date(data.creationDateTime) : undefined,
-      modifyingUser: data.modifyingUser,
-      modifiedDateTime: data.modifiedDateTime ? new Date(data.modifiedDateTime) : undefined,
+      creatingUser: attrs.creatingUser,
+      creationDateTime: attrs.creationDateTime ? new Date(attrs.creationDateTime) : undefined,
+      modifyingUser: attrs.modifyingUser,
+      modifiedDateTime: attrs.modifiedDateTime ? new Date(attrs.modifiedDateTime) : undefined,
       noteRefs: new Set(data.NoteRef?.map((r) => Ref.fromJson(r)) ?? []),
       syncPoints: new Set(data.SyncPoint?.map((s) => SyncPoint.fromJson(s)) ?? []),
       selections: new Set(data.TranscriptSelection?.map((s) => TranscriptSelection.fromJson(s)) ?? []),
-      plainTextPath: data.plainTextPath,
-      richTextPath: data.richTextPath,
+      plainTextPath: attrs.plainTextPath,
+      richTextPath: attrs.richTextPath,
       plainTextContent: data.PlainTextContent,
     });
   }
@@ -113,13 +123,19 @@ export class Transcript {
    */
   toJson(): TranscriptJson {
     const json: TranscriptJson = {
-      guid: ensureValidGuid(this.guid, "Transcript.guid"),
-      ...(this.name ? { name: this.name } : {}),
+      _attributes: {
+        guid: ensureValidGuid(this.guid, "Transcript.guid"),
+        ...(this.name ? { name: this.name } : {}),
+        ...(this.creatingUser ? { creatingUser: ensureValidGuid(this.creatingUser, "Transcript.creatingUser") } : {}),
+        ...(this.creationDateTime ? { creationDateTime: this.creationDateTime.toISOString() } : {}),
+        ...(this.modifyingUser
+          ? { modifyingUser: ensureValidGuid(this.modifyingUser, "Transcript.modifyingUser") }
+          : {}),
+        ...(this.modifiedDateTime ? { modifiedDateTime: this.modifiedDateTime.toISOString() } : {}),
+        ...(this.plainTextContent === undefined && this.plainTextPath ? { plainTextPath: this.plainTextPath } : {}),
+        ...(this.richTextPath ? { richTextPath: this.richTextPath } : {}),
+      },
       ...(this.description ? { Description: this.description } : {}),
-      ...(this.creatingUser ? { creatingUser: ensureValidGuid(this.creatingUser, "Transcript.creatingUser") } : {}),
-      ...(this.creationDateTime ? { creationDateTime: this.creationDateTime.toISOString() } : {}),
-      ...(this.modifyingUser ? { modifyingUser: ensureValidGuid(this.modifyingUser, "Transcript.modifyingUser") } : {}),
-      ...(this.modifiedDateTime ? { modifiedDateTime: this.modifiedDateTime.toISOString() } : {}),
       ...(this.plainTextContent ? { PlainTextContent: this.plainTextContent } : {}),
       ...(this.syncPoints.size > 0
         ? {
@@ -132,12 +148,10 @@ export class Transcript {
         : {}),
       ...(this.selections.size > 0 ? { TranscriptSelection: [...this.selections].map((s) => s.toJson()) } : {}),
       ...(this.noteRefs.size > 0 ? { NoteRef: [...this.noteRefs].map((r) => r.toJson()) } : {}),
-      ...(this.plainTextContent === undefined && this.plainTextPath ? { plainTextPath: this.plainTextPath } : {}),
-      ...(this.richTextPath ? { richTextPath: this.richTextPath } : {}),
-    };
+    } as unknown as TranscriptJson;
     // Re-assert XOR at serialization time to catch post-construction mutations
     assertExactlyOne(
-      { PlainTextContent: json.PlainTextContent, plainTextPath: json.plainTextPath },
+      { PlainTextContent: json.PlainTextContent, plainTextPath: json._attributes.plainTextPath },
       ["PlainTextContent", "plainTextPath"],
       "Transcript",
     );

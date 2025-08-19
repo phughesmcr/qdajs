@@ -12,6 +12,10 @@ export const REF_ELEMENTS = new Set([
   "SourceRef",
   "SelectionRef",
   "VariableRef",
+  // Set membership elements behave like references (attribute-only with targetGUID)
+  "MemberCode",
+  "MemberSource",
+  "MemberNote",
 ]);
 
 export const TEXT_ELEMENTS = new Set([

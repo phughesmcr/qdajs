@@ -1,4 +1,4 @@
-import { variableSchema } from "../../qde/schema.ts";
+import { variableJsonSchema } from "../../qde/schema.ts";
 import type { GuidString, VariableJson } from "../../qde/types.ts";
 import type { VariableType } from "../../types.ts";
 import { ensureValidGuid } from "../shared/utils.ts";
@@ -31,13 +31,14 @@ export class Variable {
    * @returns The created Variable.
    */
   static fromJson(json: VariableJson): Variable {
-    const result = variableSchema.safeParse(json);
+    const result = variableJsonSchema.safeParse(json);
     if (!result.success) throw new Error(result.error.message);
     const data = result.data as unknown as VariableJson;
+    const attrs = data._attributes as { guid: GuidString; name?: string; typeOfVariable: VariableType };
     return new Variable({
-      guid: data.guid,
-      name: data.name,
-      type: data.typeOfVariable,
+      guid: attrs.guid,
+      name: attrs.name ?? "",
+      type: attrs.typeOfVariable,
       description: data.Description,
     });
   }
@@ -59,10 +60,12 @@ export class Variable {
    */
   toJson(): VariableJson {
     return {
-      guid: ensureValidGuid(this.guid, "Variable.guid"),
-      name: this.name,
-      typeOfVariable: this.type,
+      _attributes: {
+        guid: ensureValidGuid(this.guid, "Variable.guid"),
+        name: this.name,
+        typeOfVariable: this.type,
+      },
       ...(this.description ? { Description: this.description } : {}),
-    };
+    } as unknown as VariableJson;
   }
 }

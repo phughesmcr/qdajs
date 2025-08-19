@@ -7,8 +7,8 @@ import type { ProjectJson } from "../../src/qde/types.ts";
 // Build the same logical project with different insertion orders
 function makeProject(order: number): ProjectJson {
   const users = [
-    { guid: "00000000-0000-0000-0000-0000000000b2", name: "B" },
-    { guid: "00000000-0000-0000-0000-0000000000a1", name: "A" },
+    { _attributes: { guid: "00000000-0000-0000-0000-0000000000b2", name: "B" } },
+    { _attributes: { guid: "00000000-0000-0000-0000-0000000000a1", name: "A" } },
   ];
   const codes = [
     { _attributes: { guid: "00000000-0000-0000-0000-00000000c002", name: "B", isCodable: true } },

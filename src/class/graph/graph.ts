@@ -1,4 +1,4 @@
-import { graphSchema } from "../../qde/schema.ts";
+import { graphJsonSchema } from "../../qde/schema.ts";
 import type { GraphJson, GuidString } from "../../qde/types.ts";
 import { ensureValidGuid } from "../shared/utils.ts";
 import { Edge } from "./edge.ts";
@@ -32,12 +32,13 @@ export class Graph {
    * @returns The created Graph.
    */
   static fromJson(json: GraphJson): Graph {
-    const result = graphSchema.safeParse(json);
+    const result = graphJsonSchema.safeParse(json);
     if (!result.success) throw new Error(result.error.message);
     const data = result.data as unknown as GraphJson;
+    const attrs = data._attributes as { guid: GuidString; name?: string };
     return new Graph({
-      guid: data.guid,
-      name: data.name,
+      guid: attrs.guid,
+      name: attrs.name,
       vertices: new Set(data.Vertex?.map(Vertex.fromJson) ?? []),
       edges: new Set(data.Edge?.map(Edge.fromJson) ?? []),
     });
@@ -63,10 +64,12 @@ export class Graph {
     const vertices = [...this.vertices].map((v) => v.toJson());
     const edges = [...this.edges].map((e) => e.toJson());
     return {
-      guid,
-      ...(this.name ? { name: this.name } : {}),
+      _attributes: {
+        guid,
+        ...(this.name ? { name: this.name } : {}),
+      },
       ...(vertices.length > 0 ? { Vertex: vertices } : {}),
       ...(edges.length > 0 ? { Edge: edges } : {}),
-    };
+    } as unknown as GraphJson;
   }
 }

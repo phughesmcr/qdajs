@@ -10,17 +10,21 @@ Deno.test("Selections with coding round-trip (structure only)", () => {
     Sources: {
       TextSource: [
         {
-          guid: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
-          name: "text",
-          plainTextPath: "text.txt",
+          _attributes: {
+            guid: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+            name: "text",
+            plainTextPath: "text.txt",
+          },
           PlainTextSelection: [
             {
-              guid: "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
-              startPosition: 1,
-              endPosition: 5,
+              _attributes: {
+                guid: "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
+                startPosition: 1,
+                endPosition: 5,
+              },
               Coding: [
                 {
-                  guid: "cccccccc-cccc-cccc-cccc-cccccccccccc",
+                  _attributes: { guid: "cccccccc-cccc-cccc-cccc-cccccccccccc" },
                   CodeRef: { targetGUID: "dddddddd-dddd-dddd-dddd-dddddddddddd" },
                 },
               ],

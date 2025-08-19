@@ -1,4 +1,4 @@
-import { textSourceSchema } from "../../qde/schema.ts";
+import { textSourceJsonSchema } from "../../qde/schema.ts";
 import type { TextSourceJson } from "../../qde/types.ts";
 import { VariableValue } from "../case/variableValue.ts";
 import { Coding } from "../codebook/coding.ts";
@@ -35,22 +35,32 @@ export class TextSource extends SourceBase {
    * @returns The created TextSource.
    */
   static fromJson(json: TextSourceJson): TextSource {
-    const result = textSourceSchema.safeParse(json);
+    const result = textSourceJsonSchema.safeParse(json);
     if (!result.success) throw new Error(result.error.message);
     const data = result.data as unknown as TextSourceJson;
+    const attrs = data._attributes as {
+      guid: string;
+      name?: string;
+      creatingUser?: string;
+      creationDateTime?: string;
+      modifyingUser?: string;
+      modifiedDateTime?: string;
+      richTextPath?: string;
+      plainTextPath?: string;
+    };
     return new TextSource({
-      guid: data.guid,
-      name: data.name,
+      guid: attrs.guid,
+      name: attrs.name,
       description: data.Description,
-      creatingUser: data.creatingUser,
-      creationDateTime: data.creationDateTime ? new Date(data.creationDateTime) : undefined,
-      modifyingUser: data.modifyingUser,
-      modifiedDateTime: data.modifiedDateTime ? new Date(data.modifiedDateTime) : undefined,
+      creatingUser: attrs.creatingUser,
+      creationDateTime: attrs.creationDateTime ? new Date(attrs.creationDateTime) : undefined,
+      modifyingUser: attrs.modifyingUser,
+      modifiedDateTime: attrs.modifiedDateTime ? new Date(attrs.modifiedDateTime) : undefined,
       noteRefs: new Set(data.NoteRef?.map((r) => Ref.fromJson(r)) ?? []),
       variableValues: new Set(data.VariableValue?.map((v) => VariableValue.fromJson(v)) ?? []),
       codings: new Set(data.Coding?.map((c) => Coding.fromJson(c)) ?? []),
-      richTextPath: data.richTextPath,
-      plainTextPath: data.plainTextPath,
+      richTextPath: attrs.richTextPath,
+      plainTextPath: attrs.plainTextPath,
       plainTextContent: data.PlainTextContent,
       plainTextSelections: new Set(data.PlainTextSelection?.map((s) => PlainTextSelection.fromJson(s)) ?? []),
     });
@@ -81,12 +91,18 @@ export class TextSource extends SourceBase {
    */
   toJson(): TextSourceJson {
     const json: TextSourceJson = {
-      guid: ensureValidGuid(this.guid, "TextSource.guid"),
-      ...(this.name ? { name: this.name } : {}),
-      ...(this.creatingUser ? { creatingUser: ensureValidGuid(this.creatingUser, "TextSource.creatingUser") } : {}),
-      ...(this.creationDateTime ? { creationDateTime: this.creationDateTime.toISOString() } : {}),
-      ...(this.modifyingUser ? { modifyingUser: ensureValidGuid(this.modifyingUser, "TextSource.modifyingUser") } : {}),
-      ...(this.modifiedDateTime ? { modifiedDateTime: this.modifiedDateTime.toISOString() } : {}),
+      _attributes: {
+        guid: ensureValidGuid(this.guid, "TextSource.guid"),
+        ...(this.name ? { name: this.name } : {}),
+        ...(this.creatingUser ? { creatingUser: ensureValidGuid(this.creatingUser, "TextSource.creatingUser") } : {}),
+        ...(this.creationDateTime ? { creationDateTime: this.creationDateTime.toISOString() } : {}),
+        ...(this.modifyingUser
+          ? { modifyingUser: ensureValidGuid(this.modifyingUser, "TextSource.modifyingUser") }
+          : {}),
+        ...(this.modifiedDateTime ? { modifiedDateTime: this.modifiedDateTime.toISOString() } : {}),
+        ...(this.richTextPath ? { richTextPath: this.richTextPath } : {}),
+        ...(this.plainTextPath ? { plainTextPath: this.plainTextPath } : {}),
+      },
       ...(this.description ? { Description: this.description } : {}),
       ...(this.codings.size > 0 ? { Coding: [...this.codings].map((c) => c.toJson()) } : {}),
       ...(this.noteRefs.size > 0 ? { NoteRef: [...this.noteRefs].map((r) => r.toJson()) } : {}),
@@ -96,13 +112,10 @@ export class TextSource extends SourceBase {
       ...(this.plainTextSelections.size > 0
         ? { PlainTextSelection: [...this.plainTextSelections].map((s) => s.toJson()) }
         : {}),
-
-      ...(this.richTextPath ? { richTextPath: this.richTextPath } : {}),
-      ...(this.plainTextPath ? { plainTextPath: this.plainTextPath } : {}),
-    };
+    } as unknown as TextSourceJson;
     // Re-assert XOR at serialization time to catch post-construction mutations
     assertExactlyOne(
-      { PlainTextContent: json.PlainTextContent, plainTextPath: json.plainTextPath },
+      { PlainTextContent: json.PlainTextContent, plainTextPath: json._attributes.plainTextPath },
       ["PlainTextContent", "plainTextPath"],
       "TextSource",
     );

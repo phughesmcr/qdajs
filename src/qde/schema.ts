@@ -1,11 +1,7 @@
 /**
- * QDE Schema Definitions
+ * QDE Zod Schemas
  *
- * Comprehensive Zod schema definitions for QDE (Qualitative Data Exchange) data structures.
- * Provides runtime validation for QDA project data including sources, codes, users, cases,
- * variables, notes, links, sets, and graphs according to REFI-QDA standards.
- *
- * @module
+ * One-to-one Zod object schemas for each interface declared in `src/qde/types.ts`.
  */
 
 import { z } from "zod";
@@ -19,122 +15,218 @@ import {
   SHAPES,
   VARIABLE_TYPES,
 } from "../constants.ts";
-import type { RefJson } from "./types.ts";
 
-// Enums
-export const shapeEnum: z.ZodTypeAny = z.enum(SHAPES);
-export const directionEnum: z.ZodTypeAny = z.enum(DIRECTIONS);
+// ENUMS
+export const shapeEnum = z.enum<typeof SHAPES>(SHAPES);
+export const directionEnum = z.enum<typeof DIRECTIONS>(DIRECTIONS);
+export const lineStyleEnum = z.enum<typeof LINE_STYLES>(LINE_STYLES);
+export const variableTypeEnum = z.enum<typeof VARIABLE_TYPES>(VARIABLE_TYPES);
 
-// Common field schemas
-export const guidField: z.ZodString = z.string().regex(
-  GUID_REGEX,
-  "Must be a valid GUID",
-);
-export const optionalGuidField: z.ZodOptional<z.ZodString> = guidField.optional();
-export const colorField: z.ZodOptional<z.ZodString> = z
-  .string()
-  .regex(RGB_REGEX, "Must be a valid RGB color")
-  .optional();
-export const dateTimeField: z.ZodOptional<z.ZodString> = z
-  .string()
-  .regex(ISO_DATETIME_REGEX, "Must be a valid ISO 8601 datetime")
-  .optional();
+// ATTRIBUTES
 
-export const creationMetadata: z.ZodObject<Record<string, z.ZodTypeAny>> = z.object({
+// Use project-wide GUID rules (more permissive than z.uuid to allow non-RFC versions and nil UUID)
+export const guidField = z.string().regex(GUID_REGEX, "Must be a valid GUID/UUID");
+export const optionalGuidField = guidField.optional();
+export const colorField = z.string().regex(RGB_REGEX, "Must be a valid RGB color");
+export const dateField = z.string().regex(ISO_DATE_REGEX, "Must be a valid ISO 8601 date");
+export const dateTimeField = z.string().regex(ISO_DATETIME_REGEX, "Must be a valid ISO 8601 datetime");
+
+// Fundamental building blocks
+export const identifiedSchema = z.object({ guid: guidField });
+export const nameableSchema = z.object({ name: z.string().optional() });
+export const describableSchema = z.object({ Description: z.string().optional() });
+export const colorableSchema = z.object({ color: colorField.optional() });
+
+// Shapes for composition without relying on .shape from typed Zod objects
+const identifiedShape = { guid: guidField } as const;
+const nameableShape = { name: z.string().optional() } as const;
+const describableShape = { Description: z.string().optional() } as const;
+const colorableShape = { color: colorField.optional() } as const;
+const auditCreatorAttributesShape = {
   creatingUser: optionalGuidField,
-  creationDateTime: dateTimeField,
+  creationDateTime: dateTimeField.optional(),
+} as const;
+const auditModifierAttributesShape = {
   modifyingUser: optionalGuidField,
-  modifiedDateTime: dateTimeField,
-});
+  modifiedDateTime: dateTimeField.optional(),
+} as const;
+const auditAttributesShape = {
+  ...auditCreatorAttributesShape,
+  ...auditModifierAttributesShape,
+} as const;
 
-// Common metadata fields shared across entities
-export const commonMetadata: z.ZodObject<Record<string, z.ZodTypeAny>> = z.object({
-  ...creationMetadata.shape,
-  Description: z.string().optional(),
-  NoteRef: z.array(z.object({ targetGUID: guidField })).optional(),
-});
+export const refJsonSchema = z.object({ targetGUID: guidField });
 
-// Base entity with GUID and name
-export const baseEntity: z.ZodObject<Record<string, z.ZodTypeAny>> = z.object({
-  guid: guidField,
-  name: z.string().optional(),
-  ...commonMetadata.shape,
-});
+const withNoteRefsShape = { NoteRef: z.array(refJsonSchema).optional() } as const;
+export const withNoteRefsSchema = z.object(withNoteRefsShape);
 
-export const refSchema: z.ZodType<RefJson> = z.object({
-  targetGUID: guidField,
-});
+export const usersJsonSchema = z.object({ User: z.array(z.lazy(() => userJsonSchema)) });
 
-export const codingSchema: z.ZodObject<Record<string, z.ZodTypeAny>> = z.object({
-  guid: guidField,
-  creatingUser: optionalGuidField,
-  creationDateTime: dateTimeField,
-  CodeRef: refSchema,
-  NoteRef: z.array(refSchema).optional(),
-});
-
-type CodeTree = {
-  _attributes: {
-    guid: string;
-    name: string;
-    isCodable: boolean;
-    color?: string | undefined;
-  };
-  Description?: string | undefined;
-  NoteRef?: Array<{ targetGUID: string }> | undefined;
-  Code?: CodeTree[] | undefined;
-};
-
-export const codeSchema: z.ZodType<CodeTree> = z.lazy<z.ZodType<CodeTree>>(
-  () =>
-    z
-      .object({
-        _attributes: z.object({
-          guid: guidField,
-          name: z.string(),
-          isCodable: z.boolean(),
-          color: colorField,
-        }),
-        Description: z.string().optional(),
-        NoteRef: z.array(refSchema).optional(),
-        Code: z.array(codeSchema).optional(),
-      }) as z.ZodType<CodeTree>,
+// Code (recursive)
+export const codeJsonSchema: z.ZodType<unknown> = z.lazy((): z.ZodType<unknown> =>
+  z.object({
+    _attributes: z.object({
+      ...identifiedShape,
+      ...nameableShape,
+      ...colorableShape,
+      isCodable: z.boolean(),
+    }),
+    ...describableShape,
+    ...withNoteRefsShape,
+    Code: z.array(z.lazy((): z.ZodType<unknown> => codeJsonSchema)).optional(),
+  }) as z.ZodType<unknown>
 );
 
-export const codeBookSchema: z.ZodObject<Record<string, z.ZodTypeAny>> = z.object({
-  Codes: z.object({
-    Code: z.array(codeSchema),
+export const codesJsonSchema = z.object({ Code: z.array(z.lazy(() => codeJsonSchema)).optional() });
+
+// Sets
+export const setJsonSchema = z.object({
+  _attributes: z.object({
+    ...identifiedShape,
+    ...nameableShape,
+  }),
+  ...describableShape,
+  MemberCode: z.array(refJsonSchema).optional(),
+  MemberSource: z.array(refJsonSchema).optional(),
+  MemberNote: z.array(refJsonSchema).optional(),
+});
+
+export const setsJsonSchema = z.object({ Set: z.array(z.lazy(() => setJsonSchema)).optional() });
+
+export const codebookJsonSchema = z.object({ Codes: codesJsonSchema, Sets: setsJsonSchema.optional() });
+
+export const variablesJsonSchema = z.object({ Variable: z.array(z.lazy(() => variableJsonSchema)).optional() });
+
+export const casesJsonSchema = z.object({ Case: z.array(z.lazy(() => caseJsonSchema)).optional() });
+
+export const sourcesJsonSchema = z.object({
+  TextSource: z.array(z.lazy(() => textSourceJsonSchema)).optional(),
+  PictureSource: z.array(z.lazy(() => pictureSourceJsonSchema)).optional(),
+  PDFSource: z.array(z.lazy(() => pdfSourceJsonSchema)).optional(),
+  AudioSource: z.array(z.lazy(() => audioSourceJsonSchema)).optional(),
+  VideoSource: z.array(z.lazy(() => videoSourceJsonSchema)).optional(),
+});
+
+export const notesJsonSchema = z.object({ Note: z.array(z.lazy(() => textSourceJsonSchema)).optional() });
+
+export const linksJsonSchema = z.object({ Link: z.array(z.lazy(() => linkJsonSchema)).optional() });
+
+export const graphsJsonSchema = z.object({ Graph: z.array(z.lazy(() => graphJsonSchema)).optional() });
+
+// Project
+export const projectAttributesSchema = z.object({
+  ...nameableShape,
+  ...auditAttributesShape,
+  origin: z.string().optional(),
+  basePath: z.string().optional(),
+  xmlns: z.string().optional(),
+  "xmlns:xsi": z.string().optional(),
+  "xsi:schemaLocation": z.string().optional(),
+});
+
+export const projectJsonSchema = z.object({
+  _attributes: projectAttributesSchema,
+  Users: usersJsonSchema.optional(),
+  CodeBook: codebookJsonSchema.optional(),
+  Variables: variablesJsonSchema.optional(),
+  Cases: casesJsonSchema.optional(),
+  Sources: sourcesJsonSchema.optional(),
+  Notes: notesJsonSchema.optional(),
+  Links: linksJsonSchema.optional(),
+  Sets: setsJsonSchema.optional(),
+  Graphs: graphsJsonSchema.optional(),
+  ...describableShape,
+  ...withNoteRefsShape,
+});
+
+// Coding
+export const codingJsonSchema = z.object({
+  _attributes: z.object({
+    ...identifiedShape,
+    ...auditCreatorAttributesShape,
+  }),
+  CodeRef: refJsonSchema.optional(),
+  ...withNoteRefsShape,
+});
+
+// User
+export const userJsonSchema = z.object({
+  _attributes: z.object({
+    ...identifiedShape,
+    ...nameableShape,
+    id: z.string().optional(),
   }),
 });
 
-export const userSchema: z.ZodObject<Record<string, z.ZodTypeAny>> = z.object({
-  guid: guidField,
-  name: z.string().optional(),
-  id: z.string().optional(),
-});
+// Selections: base helpers (non-exported)
+function buildBaseSelectionSchema<T extends z.ZodRawShape>(extraAttributes: T) {
+  return z.object({
+    _attributes: z.object({
+      ...auditAttributesShape,
+      ...identifiedShape,
+      ...nameableShape,
+      ...extraAttributes,
+    }),
+    ...describableShape,
+    ...withNoteRefsShape,
+    Coding: z.array(codingJsonSchema).optional(),
+  });
+}
 
-export const usersSchema: z.ZodObject<Record<string, z.ZodTypeAny>> = z.object({
-  User: z.array(userSchema),
-});
-
-export const baseSelectionSchema: z.ZodObject<Record<string, z.ZodTypeAny>> = baseEntity.extend({
-  Coding: z.array(codingSchema).optional(),
-});
-
-export const plainTextSelectionSchema: z.ZodObject<Record<string, z.ZodTypeAny>> = baseSelectionSchema.extend({
+export const plainTextSelectionJsonSchema = buildBaseSelectionSchema({
   startPosition: z.number().int(),
   endPosition: z.number().int(),
 });
 
-export const variableValueSchema: z.ZodObject<Record<string, z.ZodTypeAny>> = z
+export const coordinatesSchema = z.object({
+  firstX: z.number(),
+  firstY: z.number(),
+  secondX: z.number(),
+  secondY: z.number(),
+});
+
+export const timeRangeSchema = z.object({
+  begin: z.number(),
+  end: z.number(),
+});
+
+export const pictureSelectionJsonSchema = buildBaseSelectionSchema(coordinatesSchema.shape);
+
+export const pdfSelectionJsonSchema = z.object({
+  ...buildBaseSelectionSchema({
+    page: z.number().int(),
+    ...coordinatesSchema.shape,
+  }).shape,
+  Representation: z.lazy(() => textSourceJsonSchema).optional(),
+});
+
+export const audioSelectionJsonSchema = buildBaseSelectionSchema(timeRangeSchema.shape);
+
+export const videoSelectionJsonSchema = buildBaseSelectionSchema(timeRangeSchema.shape);
+
+export const syncPointJsonSchema = z.object({
+  _attributes: z.object({
+    ...identifiedShape,
+    timeStamp: z.number().int().optional(),
+    position: z.number().int().optional(),
+  }),
+});
+
+export const transcriptSelectionJsonSchema = buildBaseSelectionSchema({
+  fromSyncPoint: optionalGuidField,
+  toSyncPoint: optionalGuidField,
+});
+
+// VariableValue
+export const variableValueJsonSchema = z
   .object({
-    VariableRef: refSchema,
+    VariableRef: refJsonSchema,
     TextValue: z.string().optional(),
     BooleanValue: z.boolean().optional(),
     IntegerValue: z.number().int().optional(),
     FloatValue: z.number().optional(),
-    DateValue: z.string().regex(ISO_DATE_REGEX, "Must be a valid ISO 8601 date").optional(),
-    DateTimeValue: dateTimeField,
+    DateValue: dateField.optional(),
+    DateTimeValue: dateTimeField.optional(),
   })
   .refine(
     (data) =>
@@ -145,235 +237,152 @@ export const variableValueSchema: z.ZodObject<Record<string, z.ZodTypeAny>> = z
         "FloatValue",
         "DateValue",
         "DateTimeValue",
-      ].filter((field) => data[field as keyof typeof data] !== undefined).length === 1,
+      ].filter((field) => (data as Record<string, unknown>)[field] !== undefined).length === 1,
     { message: "Exactly one value type must be present (XSD choice constraint)" },
   );
 
-export const baseSourceSchema = baseEntity.extend({
+// Sources: base helpers (non-exported)
+function buildBaseSourceSchema<T extends z.ZodRawShape>(extraAttributes: T) {
+  return z.object({
+    _attributes: z.object({
+      ...identifiedShape,
+      ...nameableShape,
+      ...auditAttributesShape,
+      ...extraAttributes,
+    }),
+    ...describableShape,
+    ...withNoteRefsShape,
+    Coding: z.array(codingJsonSchema).optional(),
+    VariableValue: z.array(variableValueJsonSchema).optional(),
+  });
+}
+
+export const locatableSchema = z.object({
   path: z.string().optional(),
   currentPath: z.string().optional(),
-  Coding: z.array(codingSchema).optional(),
-  VariableValue: z.array(z.lazy(() => variableValueSchema)).optional(),
 });
 
-export const textSourceSchema = baseSourceSchema
-  .extend({
-    richTextPath: z.string().optional(),
-    plainTextPath: z.string().optional(),
-    PlainTextContent: z.string().optional(),
-    PlainTextSelection: z.array(plainTextSelectionSchema).optional(),
-  })
-  .refine((data) => {
-    const hasContent = data["PlainTextContent"] !== undefined;
-    const hasPath = data["plainTextPath"] !== undefined;
-    return (hasContent || hasPath) && !(hasContent && hasPath);
-  }, { message: "Exactly one of PlainTextContent or plainTextPath must be present" });
+export const textSourceJsonSchema = buildBaseSourceSchema({
+  richTextPath: z.string().optional(),
+  plainTextPath: z.string().optional(),
+}).extend({
+  PlainTextContent: z.string().optional(),
+  PlainTextSelection: z.array(z.lazy(() => plainTextSelectionJsonSchema)).optional(),
+}).refine((data) => {
+  const hasContent = (data as Record<string, unknown>)["PlainTextContent"] !== undefined;
+  const hasPath = (data as { _attributes: { plainTextPath?: unknown } })._attributes.plainTextPath !== undefined;
+  return (hasContent || hasPath) && !(hasContent && hasPath);
+}, { message: "Exactly one of PlainTextContent or plainTextPath must be present" });
 
-const coordinatesSchema: {
-  firstX: z.ZodNumber;
-  firstY: z.ZodNumber;
-  secondX: z.ZodNumber;
-  secondY: z.ZodNumber;
-} = {
-  firstX: z.number().int(),
-  firstY: z.number().int(),
-  secondX: z.number().int(),
-  secondY: z.number().int(),
-};
-
-const timeRangeSchema: { begin: z.ZodNumber; end: z.ZodNumber } = {
-  begin: z.number().int(),
-  end: z.number().int(),
-};
-
-export const pictureSelectionSchema: z.ZodObject<Record<string, z.ZodTypeAny>> = baseSelectionSchema.extend(
-  coordinatesSchema,
-);
-
-export const pdfSelectionSchema: z.ZodObject<Record<string, z.ZodTypeAny>> = baseSelectionSchema.extend({
-  page: z.number().int(),
-  ...coordinatesSchema,
-  Representation: z.lazy(() => textSourceSchema).optional(),
+export const pictureSourceJsonSchema = buildBaseSourceSchema(locatableSchema.shape).extend({
+  TextDescription: z.lazy(() => textSourceJsonSchema).optional(),
+  PictureSelection: z.array(z.lazy(() => pictureSelectionJsonSchema)).optional(),
 });
 
-export const audioSelectionSchema: z.ZodObject<Record<string, z.ZodTypeAny>> = baseSelectionSchema.extend(
-  timeRangeSchema,
-);
-export const videoSelectionSchema: z.ZodObject<Record<string, z.ZodTypeAny>> = baseSelectionSchema.extend(
-  timeRangeSchema,
-);
-
-export const syncPointSchema: z.ZodObject<Record<string, z.ZodTypeAny>> = z.object({
-  guid: guidField,
-  timeStamp: z.number().int().optional(),
-  position: z.number().int().optional(),
+export const pdfSourceJsonSchema = buildBaseSourceSchema(locatableSchema.shape).extend({
+  PDFSelection: z.array(z.lazy(() => pdfSelectionJsonSchema)).optional(),
+  Representation: z.lazy(() => textSourceJsonSchema).optional(),
 });
 
-export const transcriptSelectionSchema: z.ZodObject<Record<string, z.ZodTypeAny>> = baseSelectionSchema.extend({
-  fromSyncPoint: optionalGuidField,
-  toSyncPoint: optionalGuidField,
+export const audioSourceJsonSchema = buildBaseSourceSchema(locatableSchema.shape).extend({
+  Transcript: z.array(z.lazy(() => transcriptJsonSchema)).optional(),
+  AudioSelection: z.array(z.lazy(() => audioSelectionJsonSchema)).optional(),
 });
 
-export const transcriptSchema: z.ZodObject<Record<string, z.ZodTypeAny>> = baseEntity
-  .extend({
-    richTextPath: z.string().optional(),
-    plainTextPath: z.string().optional(),
-    PlainTextContent: z.string().optional(),
-    SyncPoint: z.array(syncPointSchema).optional(),
-    TranscriptSelection: z.array(transcriptSelectionSchema).optional(),
-  })
-  .refine((data) => {
-    const hasContent = data["PlainTextContent"] !== undefined;
-    const hasPath = data["plainTextPath"] !== undefined;
-    return (hasContent || hasPath) && !(hasContent && hasPath);
-  }, { message: "Exactly one of PlainTextContent or plainTextPath must be present" });
-
-export const pictureSourceSchema: z.ZodObject<Record<string, z.ZodTypeAny>> = baseSourceSchema.extend({
-  TextDescription: textSourceSchema.optional(),
-  PictureSelection: z.array(pictureSelectionSchema).optional(),
+export const videoSourceJsonSchema = buildBaseSourceSchema(locatableSchema.shape).extend({
+  Transcript: z.array(z.lazy(() => transcriptJsonSchema)).optional(),
+  VideoSelection: z.array(z.lazy(() => videoSelectionJsonSchema)).optional(),
 });
 
-export const pdfSourceSchema: z.ZodObject<Record<string, z.ZodTypeAny>> = baseSourceSchema.extend({
-  PDFSelection: z.array(pdfSelectionSchema).optional(),
-  Representation: textSourceSchema.optional(),
+export const transcriptJsonSchema = buildBaseSourceSchema({
+  richTextPath: z.string().optional(),
+  plainTextPath: z.string().optional(),
+}).extend({
+  PlainTextContent: z.string().optional(),
+  SyncPoint: z.array(z.lazy(() => syncPointJsonSchema)).optional(),
+  TranscriptSelection: z.array(z.lazy(() => transcriptSelectionJsonSchema)).optional(),
+}).refine((data) => {
+  const hasContent = (data as Record<string, unknown>)["PlainTextContent"] !== undefined;
+  const hasPath = (data as { _attributes: { plainTextPath?: unknown } })._attributes.plainTextPath !== undefined;
+  return (hasContent || hasPath) && !(hasContent && hasPath);
+}, { message: "Exactly one of PlainTextContent or plainTextPath must be present" });
+
+// Variables
+export const variableJsonSchema = z.object({
+  _attributes: z.object({
+    ...identifiedShape,
+    ...nameableShape,
+    typeOfVariable: variableTypeEnum,
+  }),
+  ...describableShape,
 });
 
-export const audioSourceSchema: z.ZodObject<Record<string, z.ZodTypeAny>> = baseSourceSchema.extend({
-  Transcript: z.array(transcriptSchema).optional(),
-  AudioSelection: z.array(audioSelectionSchema).optional(),
+// Cases
+export const caseJsonSchema = z.object({
+  _attributes: z.object({
+    ...identifiedShape,
+    ...nameableShape,
+  }),
+  ...describableShape,
+  CodeRef: z.array(refJsonSchema).optional(),
+  VariableValue: z.array(variableValueJsonSchema).optional(),
+  SourceRef: z.array(refJsonSchema).optional(),
+  SelectionRef: z.array(refJsonSchema).optional(),
 });
 
-export const videoSourceSchema: z.ZodObject<Record<string, z.ZodTypeAny>> = baseSourceSchema.extend({
-  Transcript: z.array(transcriptSchema).optional(),
-  VideoSelection: z.array(videoSelectionSchema).optional(),
+// Graphs
+export const vertexJsonSchema = z.object({
+  _attributes: z.object({
+    ...identifiedShape,
+    ...nameableShape,
+    ...colorableShape,
+    representedGUID: optionalGuidField,
+    firstX: z.number(),
+    firstY: z.number(),
+    secondX: z.number().optional(),
+    secondY: z.number().optional(),
+    shape: shapeEnum.optional(),
+  }),
 });
 
-export const sourcesSchema: z.ZodObject<Record<string, z.ZodTypeAny>> = z.object({
-  TextSource: z.array(textSourceSchema).optional(),
-  PictureSource: z.array(pictureSourceSchema).optional(),
-  PDFSource: z.array(pdfSourceSchema).optional(),
-  AudioSource: z.array(audioSourceSchema).optional(),
-  VideoSource: z.array(videoSourceSchema).optional(),
+export const edgeJsonSchema = z.object({
+  _attributes: z.object({
+    ...identifiedShape,
+    ...nameableShape,
+    ...colorableShape,
+    representedGUID: optionalGuidField,
+    sourceVertex: guidField,
+    targetVertex: guidField,
+    direction: directionEnum.optional(),
+    lineStyle: lineStyleEnum.optional(),
+  }),
 });
 
-export const variableTypeEnum: z.ZodTypeAny = z.enum(VARIABLE_TYPES);
-
-export const variableSchema: z.ZodObject<Record<string, z.ZodTypeAny>> = z.object({
-  guid: guidField,
-  name: z.string(),
-  typeOfVariable: variableTypeEnum,
-  Description: z.string().optional(),
+export const graphJsonSchema = z.object({
+  _attributes: z.object({
+    ...identifiedShape,
+    ...nameableShape,
+  }),
+  Vertex: z.array(vertexJsonSchema).optional(),
+  Edge: z.array(edgeJsonSchema).optional(),
 });
 
-export const variablesSchema: z.ZodObject<Record<string, z.ZodTypeAny>> = z.object({
-  Variable: z.array(variableSchema).optional(),
+export const graphsWrapperJsonSchema = graphsJsonSchema;
+
+// Links
+export const linkJsonSchema = z.object({
+  _attributes: z.object({
+    ...identifiedShape,
+    ...nameableShape,
+    ...colorableShape,
+    direction: directionEnum.optional(),
+    originGUID: optionalGuidField,
+    targetGUID: optionalGuidField,
+  }),
+  ...withNoteRefsShape,
 });
 
-export const caseSchema: z.ZodObject<Record<string, z.ZodTypeAny>> = z.object({
-  guid: guidField,
-  name: z.string().optional(),
-  Description: z.string().optional(),
-  CodeRef: z.array(refSchema).optional(),
-  VariableValue: z.array(variableValueSchema).optional(),
-  SourceRef: z.array(refSchema).optional(),
-  SelectionRef: z.array(refSchema).optional(),
-});
+export const notesWrapperJsonSchema = notesJsonSchema;
 
-export const casesSchema: z.ZodObject<Record<string, z.ZodTypeAny>> = z.object({
-  Case: z.array(caseSchema).optional(),
-});
-
-export const setSchema: z.ZodObject<Record<string, z.ZodTypeAny>> = z.object({
-  guid: guidField,
-  name: z.string(),
-  Description: z.string().optional(),
-  MemberCode: z.array(refSchema).optional(),
-  MemberSource: z.array(refSchema).optional(),
-  MemberNote: z.array(refSchema).optional(),
-});
-
-export const setsSchema: z.ZodObject<Record<string, z.ZodTypeAny>> = z.object({
-  Set: z.array(setSchema).optional(),
-});
-
-export const vertexSchema: z.ZodObject<Record<string, z.ZodTypeAny>> = z.object({
-  guid: guidField,
-  representedGUID: optionalGuidField,
-  name: z.string().optional(),
-  firstX: z.number().int(),
-  firstY: z.number().int(),
-  secondX: z.number().int().optional(),
-  secondY: z.number().int().optional(),
-  shape: shapeEnum.optional(),
-  color: colorField,
-});
-
-export const edgeSchema: z.ZodObject<Record<string, z.ZodTypeAny>> = z.object({
-  guid: guidField,
-  representedGUID: optionalGuidField,
-  name: z.string().optional(),
-  sourceVertex: guidField,
-  targetVertex: guidField,
-  color: colorField,
-  direction: directionEnum.optional(),
-  lineStyle: z.enum(LINE_STYLES).optional(),
-});
-
-export const graphSchema: z.ZodObject<Record<string, z.ZodTypeAny>> = z.object({
-  guid: guidField,
-  name: z.string().optional(),
-  Vertex: z.array(vertexSchema).optional(),
-  Edge: z.array(edgeSchema).optional(),
-});
-
-export const graphsSchema: z.ZodObject<Record<string, z.ZodTypeAny>> = z.object({
-  Graph: z.array(graphSchema).optional(),
-});
-
-export const linkSchema: z.ZodObject<Record<string, z.ZodTypeAny>> = z.object({
-  guid: guidField,
-  name: z.string().optional(),
-  direction: directionEnum.optional(),
-  color: colorField,
-  originGUID: optionalGuidField,
-  targetGUID: optionalGuidField,
-  NoteRef: z.array(refSchema).optional(),
-});
-
-export const linksSchema: z.ZodObject<Record<string, z.ZodTypeAny>> = z.object({
-  Link: z.array(linkSchema).optional(),
-});
-
-export const notesSchema: z.ZodObject<Record<string, z.ZodTypeAny>> = z.object({
-  Note: z.array(textSourceSchema).optional(),
-});
-
-export const projectMetaSchema: z.ZodObject<Record<string, z.ZodTypeAny>> = z.object({
-  name: z.string(),
-  origin: z.string().optional(),
-  creatingUserGUID: optionalGuidField,
-  creationDateTime: dateTimeField,
-  modifyingUserGUID: optionalGuidField,
-  modifiedDateTime: dateTimeField,
-  basePath: z.string().optional(),
-  xmlns: z.string().optional(),
-  "xmlns:xsi": z.string().optional(),
-  "xsi:schemaLocation": z.string().optional(),
-});
-
-export const projectSchema: z.ZodTypeAny = z.lazy(() =>
-  z.object({
-    _attributes: projectMetaSchema,
-    Users: usersSchema.optional(),
-    CodeBook: codeBookSchema.optional(),
-    Variables: variablesSchema.optional(),
-    Cases: casesSchema.optional(),
-    Sources: sourcesSchema.optional(),
-    Notes: notesSchema.optional(),
-    Links: linksSchema.optional(),
-    Sets: setsSchema.optional(),
-    Graphs: graphsSchema.optional(),
-    Description: z.string().optional(),
-    NoteRef: z.array(refSchema).optional(),
-  })
-);
+// Text notes alias
+export const noteJsonSchema = z.lazy(() => textSourceJsonSchema);

@@ -1,4 +1,4 @@
-import { edgeSchema } from "../../qde/schema.ts";
+import { edgeJsonSchema } from "../../qde/schema.ts";
 import type { EdgeJson, GuidString, RGBString } from "../../qde/types.ts";
 import type { Direction, LineStyle } from "../../types.ts";
 import { ensureValidGuid, ensureValidRgbColor } from "../shared/utils.ts";
@@ -40,18 +40,28 @@ export class Edge {
    * @returns The created Edge.
    */
   static fromJson(json: EdgeJson): Edge {
-    const result = edgeSchema.safeParse(json);
+    const result = edgeJsonSchema.safeParse(json);
     if (!result.success) throw new Error(result.error.message);
     const data = result.data as unknown as EdgeJson;
+    const attrs = data._attributes as {
+      guid: GuidString;
+      representedGUID?: GuidString;
+      name?: string;
+      sourceVertex: GuidString;
+      targetVertex: GuidString;
+      color?: RGBString;
+      direction?: Direction;
+      lineStyle?: LineStyle;
+    };
     return new Edge({
-      guid: data.guid,
-      representedGUID: data.representedGUID,
-      name: data.name,
-      sourceVertex: data.sourceVertex,
-      targetVertex: data.targetVertex,
-      color: data.color,
-      direction: data.direction,
-      lineStyle: data.lineStyle,
+      guid: attrs.guid,
+      representedGUID: attrs.representedGUID,
+      name: attrs.name,
+      sourceVertex: attrs.sourceVertex,
+      targetVertex: attrs.targetVertex,
+      color: attrs.color,
+      direction: attrs.direction,
+      lineStyle: attrs.lineStyle,
     });
   }
 
@@ -84,14 +94,16 @@ export class Edge {
     const targetVertex = ensureValidGuid(this.targetVertex, "Edge.targetVertex");
 
     return {
-      guid,
-      ...(representedGUID ? { representedGUID } : {}),
-      ...(this.name ? { name: this.name } : {}),
-      sourceVertex,
-      targetVertex,
-      ...(color ? { color } : {}),
-      ...(this.direction ? { direction: this.direction } : {}),
-      ...(this.lineStyle ? { lineStyle: this.lineStyle } : {}),
-    };
+      _attributes: {
+        guid,
+        ...(representedGUID ? { representedGUID } : {}),
+        ...(this.name ? { name: this.name } : {}),
+        sourceVertex,
+        targetVertex,
+        ...(color ? { color } : {}),
+        ...(this.direction ? { direction: this.direction } : {}),
+        ...(this.lineStyle ? { lineStyle: this.lineStyle } : {}),
+      },
+    } as unknown as EdgeJson;
   }
 }

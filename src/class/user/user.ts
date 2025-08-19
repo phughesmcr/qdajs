@@ -1,4 +1,4 @@
-import { userSchema } from "../../qde/schema.ts";
+import { userJsonSchema } from "../../qde/schema.ts";
 import type { GuidString, UserJson } from "../../qde/types.ts";
 import { ensureValidGuid } from "../shared/utils.ts";
 
@@ -24,14 +24,14 @@ export class User {
    * @returns The created User.
    */
   static fromJson(json: UserJson): User {
-    const result = userSchema.safeParse(json);
+    const result = userJsonSchema.safeParse(json);
     if (!result.success) throw new Error(result.error.message);
-
     const data = result.data as unknown as UserJson;
+    const attrs = data._attributes as { guid: GuidString; name?: string; id?: string };
     return new User({
-      guid: data.guid,
-      name: data.name,
-      id: data.id,
+      guid: attrs.guid,
+      name: attrs.name,
+      id: attrs.id,
     });
   }
 
@@ -51,10 +51,11 @@ export class User {
    */
   toJson(): UserJson {
     return {
-      // TODO: check this doesn't need to be in the _attributes object
-      guid: ensureValidGuid(this.guid, "User.guid"),
-      ...(this.name ? { name: this.name } : {}),
-      ...(this.id ? { id: this.id } : {}),
-    };
+      _attributes: {
+        guid: ensureValidGuid(this.guid, "User.guid"),
+        ...(this.name ? { name: this.name } : {}),
+        ...(this.id ? { id: this.id } : {}),
+      },
+    } as unknown as UserJson;
   }
 }

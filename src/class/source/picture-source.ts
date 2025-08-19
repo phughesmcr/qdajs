@@ -1,4 +1,4 @@
-import { pictureSourceSchema } from "../../qde/schema.ts";
+import { pictureSourceJsonSchema } from "../../qde/schema.ts";
 import type { PictureSourceJson } from "../../qde/types.ts";
 import { VariableValue } from "../case/variableValue.ts";
 import { Coding } from "../codebook/coding.ts";
@@ -36,22 +36,32 @@ export class PictureSource extends SourceBase {
    * @returns The created PictureSource.
    */
   static fromJson(json: PictureSourceJson): PictureSource {
-    const result = pictureSourceSchema.safeParse(json);
+    const result = pictureSourceJsonSchema.safeParse(json);
     if (!result.success) throw new Error(result.error.message);
     const data = result.data as unknown as PictureSourceJson;
+    const attrs = data._attributes as {
+      guid: string;
+      name?: string;
+      creatingUser?: string;
+      creationDateTime?: string;
+      modifyingUser?: string;
+      modifiedDateTime?: string;
+      path?: string;
+      currentPath?: string;
+    };
     return new PictureSource({
-      guid: data.guid,
-      name: data.name,
-      creatingUser: data.creatingUser,
-      creationDateTime: data.creationDateTime ? new Date(data.creationDateTime) : undefined,
-      modifyingUser: data.modifyingUser,
-      modifiedDateTime: data.modifiedDateTime ? new Date(data.modifiedDateTime) : undefined,
+      guid: attrs.guid,
+      name: attrs.name,
+      creatingUser: attrs.creatingUser,
+      creationDateTime: attrs.creationDateTime ? new Date(attrs.creationDateTime) : undefined,
+      modifyingUser: attrs.modifyingUser,
+      modifiedDateTime: attrs.modifiedDateTime ? new Date(attrs.modifiedDateTime) : undefined,
       description: data.Description,
       noteRefs: new Set(data.NoteRef?.map((r) => Ref.fromJson(r)) ?? []),
       variableValues: new Set(data.VariableValue?.map((v) => VariableValue.fromJson(v)) ?? []),
       codings: new Set(data.Coding?.map((c) => Coding.fromJson(c)) ?? []),
-      path: data.path,
-      currentPath: data.currentPath,
+      path: attrs.path,
+      currentPath: attrs.currentPath,
       pictureSelections: new Set(data.PictureSelection?.map((s) => PictureSelection.fromJson(s)) ?? []),
       textDescription: data.TextDescription ? TextSource.fromJson(data.TextDescription) : undefined,
     });
@@ -75,25 +85,28 @@ export class PictureSource extends SourceBase {
    */
   toJson(): PictureSourceJson {
     return {
-      guid: ensureValidGuid(this.guid, "PictureSource.guid"),
-      ...(this.name ? { name: this.name } : {}),
-      ...(this.creatingUser ? { creatingUser: ensureValidGuid(this.creatingUser, "PictureSource.creatingUser") } : {}),
-      ...(this.creationDateTime ? { creationDateTime: this.creationDateTime.toISOString() } : {}),
-      ...(this.modifyingUser
-        ? { modifyingUser: ensureValidGuid(this.modifyingUser, "PictureSource.modifyingUser") }
-        : {}),
-      ...(this.modifiedDateTime ? { modifiedDateTime: this.modifiedDateTime.toISOString() } : {}),
+      _attributes: {
+        guid: ensureValidGuid(this.guid, "PictureSource.guid"),
+        ...(this.name ? { name: this.name } : {}),
+        ...(this.creatingUser
+          ? { creatingUser: ensureValidGuid(this.creatingUser, "PictureSource.creatingUser") }
+          : {}),
+        ...(this.creationDateTime ? { creationDateTime: this.creationDateTime.toISOString() } : {}),
+        ...(this.modifyingUser
+          ? { modifyingUser: ensureValidGuid(this.modifyingUser, "PictureSource.modifyingUser") }
+          : {}),
+        ...(this.modifiedDateTime ? { modifiedDateTime: this.modifiedDateTime.toISOString() } : {}),
+        ...(this.path ? { path: this.path } : {}),
+        ...(this.currentPath ? { currentPath: this.currentPath } : {}),
+      },
       ...(this.description ? { Description: this.description } : {}),
       ...(this.codings.size > 0 ? { Coding: [...this.codings].map((c) => c.toJson()) } : {}),
       ...(this.noteRefs.size > 0 ? { NoteRef: [...this.noteRefs].map((r) => r.toJson()) } : {}),
       ...(this.variableValues.size > 0 ? { VariableValue: [...this.variableValues].map((v) => v.toJson()) } : {}),
-
       ...(this.pictureSelections.size > 0
         ? { PictureSelection: [...this.pictureSelections].map((s) => s.toJson()) }
         : {}),
       ...(this.textDescription ? { TextDescription: this.textDescription.toJson() } : {}),
-      ...(this.path ? { path: this.path } : {}),
-      ...(this.currentPath ? { currentPath: this.currentPath } : {}),
-    };
+    } as unknown as PictureSourceJson;
   }
 }

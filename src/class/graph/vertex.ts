@@ -1,4 +1,4 @@
-import { vertexSchema } from "../../qde/schema.ts";
+import { vertexJsonSchema } from "../../qde/schema.ts";
 import type { GuidString, RGBString, VertexJson } from "../../qde/types.ts";
 import type { Shape } from "../../types.ts";
 import { ensureInteger, ensureValidGuid, ensureValidRgbColor } from "../shared/utils.ts";
@@ -43,19 +43,30 @@ export class Vertex {
    * @returns The created Vertex.
    */
   static fromJson(json: VertexJson): Vertex {
-    const result = vertexSchema.safeParse(json);
+    const result = vertexJsonSchema.safeParse(json);
     if (!result.success) throw new Error(result.error.message);
     const data = result.data as unknown as VertexJson;
+    const attrs = data._attributes as {
+      guid: GuidString;
+      representedGUID?: GuidString;
+      name?: string;
+      firstX: number;
+      firstY: number;
+      secondX?: number;
+      secondY?: number;
+      shape?: Shape;
+      color?: RGBString;
+    };
     return new Vertex({
-      guid: data.guid,
-      representedGUID: data.representedGUID,
-      name: data.name,
-      firstX: data.firstX,
-      firstY: data.firstY,
-      secondX: data.secondX,
-      secondY: data.secondY,
-      shape: data.shape,
-      color: data.color,
+      guid: attrs.guid,
+      representedGUID: attrs.representedGUID,
+      name: attrs.name,
+      firstX: attrs.firstX,
+      firstY: attrs.firstY,
+      secondX: attrs.secondX,
+      secondY: attrs.secondY,
+      shape: attrs.shape,
+      color: attrs.color,
     });
   }
 
@@ -83,15 +94,17 @@ export class Vertex {
     const secondY = this.secondY ? ensureInteger(this.secondY, "Vertex.secondY") : undefined;
 
     return {
-      guid,
-      ...(representedGUID ? { representedGUID } : {}),
-      ...(this.name ? { name: this.name } : {}),
-      firstX,
-      firstY,
-      ...(secondX ? { secondX } : {}),
-      ...(secondY ? { secondY } : {}),
-      ...(this.shape ? { shape: this.shape } : {}),
-      ...(color ? { color } : {}),
-    };
+      _attributes: {
+        guid,
+        ...(representedGUID ? { representedGUID } : {}),
+        ...(this.name ? { name: this.name } : {}),
+        firstX,
+        firstY,
+        ...(secondX ? { secondX } : {}),
+        ...(secondY ? { secondY } : {}),
+        ...(this.shape ? { shape: this.shape } : {}),
+        ...(color ? { color } : {}),
+      },
+    } as unknown as VertexJson;
   }
 }

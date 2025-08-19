@@ -1,4 +1,4 @@
-import { caseSchema } from "../../qde/schema.ts";
+import { caseJsonSchema } from "../../qde/schema.ts";
 import type { CaseJson, GuidString } from "../../qde/types.ts";
 import { Ref } from "../ref/ref.ts";
 import { ensureValidGuid } from "../shared/utils.ts";
@@ -41,28 +41,20 @@ export class Case {
    * @returns The created Case.
    */
   static fromJson(json: CaseJson): Case {
-    const result = caseSchema.safeParse(json);
+    const result = caseJsonSchema.safeParse(json);
     if (!result.success) throw new Error(result.error.message);
+    const data = result.data as unknown as CaseJson;
+    const attrs = data._attributes as { guid: GuidString; name?: string };
 
-    const {
-      guid,
-      name,
-      Description,
-      CodeRef,
-      VariableValue,
-      SourceRef,
-      SelectionRef,
-    } = result.data as unknown as CaseJson;
-
-    const variableValues = new Set(VariableValue?.map((value) => VariableValueClass.fromJson(value)) ?? []);
-    const sourceRefs = new Set(SourceRef?.map((ref) => Ref.fromJson(ref)) ?? []);
-    const selectionRefs = new Set(SelectionRef?.map((ref) => Ref.fromJson(ref)) ?? []);
-    const codeRefs = new Set(CodeRef?.map((ref) => Ref.fromJson(ref)) ?? []);
+    const variableValues = new Set(data.VariableValue?.map((value) => VariableValueClass.fromJson(value)) ?? []);
+    const sourceRefs = new Set(data.SourceRef?.map((ref) => Ref.fromJson(ref)) ?? []);
+    const selectionRefs = new Set(data.SelectionRef?.map((ref) => Ref.fromJson(ref)) ?? []);
+    const codeRefs = new Set(data.CodeRef?.map((ref) => Ref.fromJson(ref)) ?? []);
 
     return new Case({
-      guid,
-      name,
-      description: Description,
+      guid: attrs.guid,
+      name: attrs.name,
+      description: data.Description,
       codeRefs,
       variableValues,
       sourceRefs,
@@ -90,13 +82,15 @@ export class Case {
    */
   toJson(): CaseJson {
     return {
-      guid: ensureValidGuid(this.guid, "Case.guid"),
-      ...(this.name ? { name: this.name } : {}),
+      _attributes: {
+        guid: ensureValidGuid(this.guid, "Case.guid"),
+        ...(this.name ? { name: this.name } : {}),
+      },
       ...(this.description ? { Description: this.description } : {}),
       ...(this.codeRefs.size > 0 ? { CodeRef: [...this.codeRefs].map((ref) => ref.toJson()) } : {}),
       ...(this.variableValues.size > 0 ? { VariableValue: [...this.variableValues].map((v) => v.toJson()) } : {}),
       ...(this.sourceRefs.size > 0 ? { SourceRef: [...this.sourceRefs].map((ref) => ref.toJson()) } : {}),
       ...(this.selectionRefs.size > 0 ? { SelectionRef: [...this.selectionRefs].map((ref) => ref.toJson()) } : {}),
-    };
+    } as unknown as CaseJson;
   }
 }
